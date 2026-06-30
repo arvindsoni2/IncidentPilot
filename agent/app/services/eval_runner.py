@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from agent.adapters.metrics import MetricsSnapshot
 from agent.adapters.runtime import ContainerStatus, LogEvidence
@@ -18,6 +19,7 @@ from agent.app.services.evidence_collector import (
     HealthEndpointEvidence,
     IncidentContext,
 )
+from agent.app.services.persistence import save_eval_run
 from agent.app.services.report_generator import SREReportGenerator
 from agent.app.services.rule_diagnosis import RuleDiagnosisEngine
 
@@ -62,12 +64,14 @@ class EvalRunner:
         settings: Settings,
         golden_directory: Path = DEFAULT_GOLDEN_DIRECTORY,
         output_directory: Path | None = None,
+        session: Session | None = None,
     ) -> None:
         self.settings = settings
         self.golden_directory = golden_directory
         self.output_directory = output_directory or Path(
             settings.evals.output_directory
         )
+        self.session = session
         self.rules = RuleDiagnosisEngine()
         self.reports = SREReportGenerator()
 
@@ -81,7 +85,20 @@ class EvalRunner:
         )
         results = [self._evaluate(item) for item in scenarios]
         for result in results:
-            self._persist(result)
+            output_path = self._persist(result)
+            if self.session is not None:
+                save_eval_run(
+                    self.session,
+                    scenario_id=result.scenario_id,
+                    passed=result.passed,
+                    model=result.model,
+                    prompt_versions=result.prompt_versions,
+                    checks=[
+                        check.model_dump(mode="json")
+                        for check in result.checks
+                    ],
+                    output_path=str(output_path),
+                )
         return results
 
     def _evaluate(self, scenario_id: str) -> EvalResult:

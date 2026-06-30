@@ -45,7 +45,10 @@ def test_database_initializes_all_core_tables(tmp_path: Path) -> None:
 
     assert set(inspect(engine).get_table_names()) == {
         "agent_runs",
+        "alembic_version",
         "deployment_events",
+        "eval_check_results",
+        "eval_runs",
         "health_check_results",
         "hypotheses",
         "incident_evidence",

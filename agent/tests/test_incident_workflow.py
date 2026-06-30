@@ -21,6 +21,7 @@ from agent.app.services import (
     EvidenceCollector,
     LLMDiagnosisService,
     get_incident_detail,
+    list_incidents,
 )
 from agent.workflows import PlainPythonIncidentWorkflow
 
@@ -251,3 +252,29 @@ def test_rules_only_fallback_end_to_end(session: Session) -> None:
     assert incident.status == "diagnosed"
     assert incident.llm_status == "unavailable"
     assert incident.reports[0].json_payload["rules_only"] is True
+
+
+def test_failed_analysis_has_explicit_lifecycle_state(
+    session: Session,
+) -> None:
+    workflow = build_workflow(
+        session,
+        backend_running=False,
+        postgres_running=True,
+        health_status=503,
+    )
+
+    def fail_collection(**_kwargs):
+        raise RuntimeError("runtime disappeared")
+
+    workflow.evidence_collector.collect = fail_collection
+
+    with pytest.raises(RuntimeError, match="runtime disappeared"):
+        workflow.analyze_service("backend")
+
+    incidents = list_incidents(session, status="failed")
+    assert len(incidents) == 1
+    assert incidents[0].summary == "Analysis failed: runtime disappeared"
+    detail = get_incident_detail(session, incidents[0].id)
+    assert detail is not None
+    assert detail.agent_runs[0].status == "failed"

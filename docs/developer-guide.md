@@ -36,6 +36,7 @@ committed `uv.lock`.
 | `make eval` | Deterministic FS-001/FS-002 evals | `uv run incidentpilot evals run` |
 | `make check` | Fast developer loop | lint + test |
 | `make verify` | Docker-free product verification | check + eval |
+| `make smoke-clean` | Fresh-checkout install/startup smoke | isolated archive + locked sync + health probe |
 | `make compose-check` | Validate the demo Compose model | `docker compose -f infra/compose.yaml config --quiet` |
 | `make compose-build` | Build local demo images | `docker compose -f infra/compose.yaml build` |
 | `make ci-local` | Full local CI parity | verify + Compose validation + build |
@@ -68,6 +69,21 @@ cp config.example.yaml config.yaml
 uv run incidentpilot db init
 uv run incidentpilot web
 ```
+
+`incidentpilot db init` is idempotent. It runs Alembic migrations to the latest
+revision and safely adopts databases created by the MVP before migration
+versioning existed.
+
+Evaluation runs are stored both as timestamped JSON files and queryable database
+records:
+
+```bash
+uv run incidentpilot evals list
+uv run incidentpilot evals export --output eval-history.json
+uv run incidentpilot evals prune --older-than-days 90 --yes
+```
+
+See [Data retention and export](data-retention.md) for the deletion contract.
 
 If dependency metadata changes, run `uv lock` and commit the updated lockfile.
 If CI reports lockfile drift, reproduce it with `uv lock --check`.
