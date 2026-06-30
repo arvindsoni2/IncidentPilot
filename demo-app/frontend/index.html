@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IncidentPilot Demo</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { display: grid; min-height: 100vh; margin: 0; place-items: center; background: #07111f; color: #dbeafe; }
+      main { width: min(42rem, calc(100% - 3rem)); }
+      p:first-child { color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
+      h1 { margin: 0; color: white; font-size: clamp(3rem, 9vw, 6rem); letter-spacing: -.06em; }
+      code { color: #86efac; }
+      nav { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+      a { padding: .7rem 1rem; border: 1px solid #164e63; border-radius: .55rem; background: #0c2f40; color: #7dd3fc; font-weight: 700; text-decoration: none; }
+      a:hover { background: #164e63; color: white; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>Instrumented test workload</p>
+      <h1>Demo app online.</h1>
+      <p>This deliberately simple service gives IncidentPilot something safe to observe and diagnose.</p>
+      <p>Backend health: <code>http://127.0.0.1:8001/health</code></p>
+      <nav aria-label="Local demo interfaces">
+        <a href="http://127.0.0.1:8083/">Open IncidentPilot dashboard</a>
+        <a href="http://127.0.0.1:3001/">Open Grafana</a>
+      </nav>
+    </main>
+  </body>
+</html>

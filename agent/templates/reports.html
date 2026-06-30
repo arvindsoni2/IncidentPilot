@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Reports · IncidentPilot{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">SRE records</p><h1>Reports</h1><p>Human-readable Markdown and structured JSON analysis.</p></div></header>
+<div class="report-grid">
+{% for incident in incidents %}
+  <article class="panel report-card">
+    <div><span class="severity {{ incident.severity }}">{{ incident.severity }}</span><span class="status-pill">{{ incident.status }}</span></div>
+    <h2>{{ format_incident_ref(incident.id) }}</h2>
+    <p>{{ incident.service.name }} · {{ incident.summary }}</p>
+    <div class="button-row"><a class="button compact primary" href="/incidents/{{ incident.id }}">View</a><a class="button compact secondary" href="/reports/{{ incident.id }}/download.md">Markdown</a><a class="button compact secondary" href="/reports/{{ incident.id }}/export.json">JSON</a></div>
+  </article>
+{% else %}
+  <div class="empty-state">No reports generated yet.</div>
+{% endfor %}
+</div>
+{% endblock %}

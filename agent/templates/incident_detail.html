@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ format_incident_ref(incident.id) }} · IncidentPilot{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div><p class="eyebrow">{{ incident.service.name }} · {{ incident.trigger_type }}</p><h1>{{ format_incident_ref(incident.id) }}</h1><p>{{ incident.summary }}</p></div>
+  <div class="header-meta"><span class="severity {{ incident.severity }}">{{ incident.severity }}</span><span class="status-pill">{{ incident.status }}</span></div>
+</header>
+
+<section class="panel">
+  <h2>Timeline</h2>
+  <ol class="timeline">
+    <li><strong>Detected</strong><span>{{ incident.detected_at }}</span></li>
+    <li><strong>Analysis started</strong><span>{{ incident.started_at }}</span></li>
+    <li><strong>Diagnosed</strong><span>{{ incident.diagnosed_at or 'In progress' }}</span></li>
+    {% if incident.resolved_at %}<li><strong>Resolved</strong><span>{{ incident.resolved_at }}</span></li>{% endif %}
+    {% if incident.closed_at %}<li><strong>Closed</strong><span>{{ incident.closed_at }}</span></li>{% endif %}
+  </ol>
+</section>
+
+<section class="panel">
+  <div class="section-heading"><h2>Evidence</h2><span class="muted">{{ incident.evidence|length }} items</span></div>
+  <div class="evidence-list">
+  {% for item in incident.evidence %}
+    <article><span class="evidence-type">{{ item.type }}</span><strong>{{ item.source }}</strong><p>{{ item.summary }}</p><code>evidence:{{ item.id }}</code></article>
+  {% else %}<div class="empty-state">Evidence collection pending.</div>{% endfor %}
+  </div>
+</section>
+
+<section class="split">
+  <div class="panel">
+    <h2>Ranked hypotheses</h2>
+    {% for item in incident.hypotheses %}
+    <article class="hypothesis"><span class="rank">{{ item.rank }}</span><div><strong>{{ item.cause }}</strong><p>{{ item.reasoning }}</p><small>Confidence {{ (item.confidence * 100)|round|int }}% · {{ item.evidence_refs|join(', ') }}</small></div></article>
+    {% else %}<div class="empty-state">Diagnosis pending.</div>{% endfor %}
+  </div>
+  <div class="panel">
+    <h2>Recommendations</h2>
+    {% for item in incident.recommendations %}
+    <article class="recommendation"><strong>{{ item.title }}</strong><code>{{ item.action_key }}</code><p>{{ item.rationale }}</p><div class="disabled-banner">Execution disabled in MVP · Executed: no</div></article>
+    {% else %}<div class="empty-state">No recommendation generated.</div>{% endfor %}
+  </div>
+</section>
+
+{% if incident.reports %}
+<section class="panel">
+  <div class="section-heading"><h2>Report</h2><div class="button-row"><button class="button compact secondary" onclick="copyReport('report-markdown')">Copy Markdown</button><a class="button compact secondary" href="/reports/{{ incident.id }}/download.md">Download</a><a class="button compact secondary" href="/reports/{{ incident.id }}/export.json">Export JSON</a></div></div>
+  <pre id="report-markdown" class="report">{{ incident.reports[-1].markdown }}</pre>
+</section>
+{% endif %}
+{% endblock %}

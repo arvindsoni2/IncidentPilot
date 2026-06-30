@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · IncidentPilot{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <p class="eyebrow">Operational overview</p>
+    <h1>Dashboard</h1>
+    <p>Evidence-led incident triage across your local services.</p>
+  </div>
+  <div class="header-badge"><span class="status-dot healthy"></span> Agent ready</div>
+</header>
+
+<section>
+  <div class="section-heading">
+    <div><p class="eyebrow">Live state</p><h2>Service health</h2></div>
+    <span class="muted">Refreshes every 15 seconds</span>
+  </div>
+  <div id="service-cards" hx-get="/partials/service-cards" hx-trigger="every 15s" hx-swap="innerHTML">
+    {% include "partials/service_cards.html" %}
+  </div>
+</section>
+
+<section class="split">
+  <div class="panel">
+    <div class="section-heading"><h2>Active incidents</h2><a href="/incidents">View all</a></div>
+    {% if active_incidents %}
+      {% for incident in active_incidents %}
+      <a class="incident-row" href="/incidents/{{ incident.id }}">
+        <span class="severity {{ incident.severity }}">{{ incident.severity }}</span>
+        <span><strong>{{ format_incident_ref(incident.id) }}</strong><small>{{ incident.service.name }} · {{ incident.summary }}</small></span>
+        <span class="status-pill">{{ incident.status }}</span>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">No active incidents.</div>
+    {% endif %}
+  </div>
+  <div class="panel">
+    <div class="section-heading"><h2>Controlled demo</h2><span class="muted">Allowlisted only</span></div>
+    <p>Trigger predefined failures in the isolated demo workload.</p>
+    <div class="button-stack">
+      <form method="post" action="/actions/scenarios/FS-001"><button class="button danger-outline">Trigger FS-001 · Stop backend</button></form>
+      <form method="post" action="/actions/scenarios/FS-002"><button class="button danger-outline">Trigger FS-002 · Stop database</button></form>
+      <form method="post" action="/actions/scenarios/reset"><button class="button secondary">Reset demo baseline</button></form>
+    </div>
+  </div>
+</section>
+{% endblock %}

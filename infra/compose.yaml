@@ -1,0 +1,90 @@
+name: incidentpilot-demo
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: incidentpilot-demo-postgres
+    environment:
+      POSTGRES_DB: incidentpilot_demo
+      POSTGRES_USER: incidentpilot
+      POSTGRES_PASSWORD: incidentpilot-demo-only
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - demo-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U incidentpilot -d incidentpilot_demo"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ../demo-app/backend
+    image: incidentpilot-demo-backend:local
+    container_name: incidentpilot-demo-backend
+    environment:
+      DATABASE_URL: postgresql://incidentpilot:incidentpilot-demo-only@postgres:5432/incidentpilot_demo
+      DB_CONNECT_TIMEOUT_SECONDS: "2"
+    ports:
+      - "127.0.0.1:8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../demo-app/frontend
+    image: incidentpilot-demo-frontend:local
+    container_name: incidentpilot-demo-frontend
+    ports:
+      - "127.0.0.1:8082:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: incidentpilot-demo-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    container_name: incidentpilot-demo-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: incidentpilot-demo-only
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro,z
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro,z
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  demo-postgres-data:

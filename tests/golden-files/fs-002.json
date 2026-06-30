@@ -1,0 +1,7 @@
+{
+  "scenario_id": "FS-002",
+  "service": "backend",
+  "rank1_cause": "dependency_unavailable",
+  "recommendation_action": "restore_dependency_service",
+  "execution_enabled_in_mvp": false
+}

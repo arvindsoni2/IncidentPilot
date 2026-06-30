@@ -1,0 +1,2 @@
+# The shared Compose baseline currently needs no Podman-specific changes.
+services: {}

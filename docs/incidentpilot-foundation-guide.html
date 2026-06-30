@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IncidentPilot Foundation Guide</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --panel: #111827;
+  --panel2: #1f2937;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #38bdf8;
+  --accent2: #22c55e;
+  --border: #334155;
+  --code: #020617;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #020617, #0f172a 45%, #111827);
+  color: var(--text);
+}
+header {
+  padding: 32px 40px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.88);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  backdrop-filter: blur(12px);
+}
+.kicker {
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 700;
+}
+h1 {
+  margin: 8px 0;
+  font-size: 34px;
+}
+.subtitle {
+  color: var(--muted);
+  max-width: 960px;
+  line-height: 1.6;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: calc(100vh - 140px);
+}
+nav {
+  border-right: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.72);
+  padding: 20px;
+  position: sticky;
+  top: 132px;
+  height: calc(100vh - 132px);
+  overflow-y: auto;
+}
+.tab-button {
+  width: 100%;
+  display: block;
+  text-align: left;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 650;
+}
+.tab-button:hover {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+.tab-button.active {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: var(--accent);
+  color: white;
+}
+main {
+  padding: 28px 40px 80px;
+  max-width: 1220px;
+}
+.tab-content {
+  display: none;
+  background: rgba(17, 24, 39, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.24);
+}
+.tab-content.active { display: block; }
+h1, h2, h3, h4 { color: #f8fafc; }
+h2 {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 32px;
+}
+p, li {
+  line-height: 1.65;
+  color: #d1d5db;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0 26px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+th, td {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+th {
+  background: rgba(56, 189, 248, 0.12);
+  color: #f8fafc;
+}
+td { background: rgba(2, 6, 23, 0.25); }
+pre {
+  background: var(--code);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  overflow-x: auto;
+  color: #dbeafe;
+}
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+}
+.badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.badge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #bbf7d0;
+  font-size: 13px;
+  font-weight: 700;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  nav {
+    position: relative;
+    top: 0;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  main { padding: 20px; }
+  header { padding: 24px; position: relative; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Foundation Pack v0.1 · 2026-06-29</div>
+  <h1>IncidentPilot</h1>
+  <p class="subtitle">A local-first incident triage and future self-healing DevOps agent for Docker/Podman-hosted applications. MVP is read-only: observe, diagnose, recommend, and report.</p>
+  <div class="badges">
+    <span class="badge">Docker + Podman</span>
+    <span class="badge">FastAPI + HTMX</span>
+    <span class="badge">Rules + LLM</span>
+    <span class="badge">SQLite/PostgreSQL</span>
+    <span class="badge">Prometheus + Grafana</span>
+  </div>
+</header>
+<div class="layout">
+<nav>
+<button class="tab-button active" data-tab="tab0">PRD</button>
+<button class="tab-button " data-tab="tab1">Story Map</button>
+<button class="tab-button " data-tab="tab2">Acceptance Criteria</button>
+<button class="tab-button " data-tab="tab3">Architecture</button>
+<button class="tab-button " data-tab="tab4">UI/UX</button>
+<button class="tab-button " data-tab="tab5">Codex Plan</button>
+<button class="tab-button " data-tab="tab6">Testing &amp; Evals</button>
+<button class="tab-button " data-tab="tab7">Runbook &amp; Demo</button>
+</nav>
+<main>
+<section id="tab0" class="tab-content active"><h1>IncidentPilot PRD</h1>
+
+<p><strong>Date:</strong> 2026-06-29  </p>
+<p><strong>Version:</strong> Foundation Pack v0.1  </p>
+<p><strong>Status:</strong> Draft for implementation planning</p>
+
+<h2>1. Product Summary</h2>
+
+<p><strong>IncidentPilot</strong> is a local-first incident triage and future self-healing DevOps agent. It watches Docker/Podman-hosted applications, diagnoses failures, ranks probable causes, recommends safe recovery actions, and generates SRE-style incident reports.</p>
+
+<p>The first iteration is intentionally <strong>read-only</strong>. It does not restart, rollback, delete, or modify anything. It observes, reasons, recommends, and reports.</p>
+
+<h2>2. Product Positioning</h2>
+
+<p>IncidentPilot is designed for:</p>
+
+<ol><li>A solo developer running local containerised applications.</li></ol>
+<ol><li>A portfolio/interview audience evaluating agentic AI, DevOps, observability, and safety architecture.</li></ol>
+<ol><li>A future small DevOps/SRE team managing services on a single server or cloud VM.</li></ol>
+
+<h2>3. Problem Statement</h2>
+
+<p>When a local or small-server containerised application fails, developers often manually inspect:</p>
+
+<ul><li>container status</li></ul>
+<ul><li>runtime logs</li></ul>
+<ul><li>health checks</li></ul>
+<ul><li>recent deployment changes</li></ul>
+<ul><li>dependency containers</li></ul>
+<ul><li>resource usage</li></ul>
+<ul><li>metrics dashboards</li></ul>
+
+<p>This is repetitive and error-prone. IncidentPilot should collect the relevant evidence, diagnose the likely cause, explain the reasoning, and produce a structured incident report.</p>
+
+<h2>4. Goals</h2>
+
+<h3>MVP Goals</h3>
+
+<ul><li>Monitor explicitly configured and opt-in labelled Docker/Podman services.</li></ul>
+<ul><li>Detect unhealthy services through manual trigger and configurable health polling.</li></ul>
+<ul><li>Collect evidence from container runtime, recent logs, health checks, and Prometheus metrics.</li></ul>
+<ul><li>Diagnose two initial failure scenarios:</li></ul>
+<ul><li>FS-001: backend container stopped.</li></ul>
+<ul><li>FS-002: backend health check failing because database is down.</li></ul>
+<ul><li>Produce structured JSON and human-readable SRE-style Markdown reports.</li></ul>
+<ul><li>Provide both web dashboard and CLI access.</li></ul>
+<ul><li>Store incident history, evidence, hypotheses, recommendations, and reports.</li></ul>
+<ul><li>Support rules + LLM diagnosis, with rules-only fallback if LLM is unavailable.</li></ul>
+<ul><li>Execute no remediation actions in MVP.</li></ul>
+
+<h3>Future Goals</h3>
+
+<ul><li>Enable controlled self-healing for predefined safe actions.</li></ul>
+<ul><li>Add approval workflows for rollback.</li></ul>
+<ul><li>Add Loki and OpenTelemetry Collector.</li></ul>
+<ul><li>Add LangGraph implementation behind the workflow interface.</li></ul>
+<ul><li>Add pattern memory and incident similarity search.</li></ul>
+<ul><li>Add full postmortem workflow.</li></ul>
+<ul><li>Add server/cloud security model.</li></ul>
+
+<h2>5. Non-Goals for MVP</h2>
+
+<ul><li>No unrestricted shell execution.</li></ul>
+<ul><li>No autonomous remediation.</li></ul>
+<ul><li>No delete volume capability.</li></ul>
+<ul><li>No Kubernetes support.</li></ul>
+<ul><li>No multi-user authentication.</li></ul>
+<ul><li>No production network exposure.</li></ul>
+<ul><li>No full ITSM workflow.</li></ul>
+<ul><li>No semantic vector memory.</li></ul>
+<ul><li>No Loki or OpenTelemetry Collector in Iteration 1.</li></ul>
+
+<h2>6. Core Decisions</h2>
+
+<table>
+<thead><tr><th>Area</th><th>Decision</th></tr></thead><tbody>
+<tr><td>Project name</td><td>IncidentPilot</td></tr>
+<tr><td>Product type</td><td>Local-first incident triage and future self-healing DevOps agent</td></tr>
+<tr><td>Primary environment</td><td>Local laptop</td></tr>
+<tr><td>Future portability</td><td>Single server / cloud VM compatible</td></tr>
+<tr><td>Runtime support</td><td>Docker + Podman from day one</td></tr>
+<tr><td>Target app</td><td>Demo app + intentional failure scenarios</td></tr>
+<tr><td>Autonomy</td><td>Read-only diagnosis and recommendations in MVP</td></tr>
+<tr><td>Triggers</td><td>Manual UI/CLI trigger + health polling</td></tr>
+<tr><td>Polling</td><td>Configurable per service, default 30 seconds</td></tr>
+<tr><td>UI</td><td>Web dashboard + CLI</td></tr>
+<tr><td>UI stack</td><td>FastAPI + Jinja + HTMX</td></tr>
+<tr><td>Main language</td><td>Python</td></tr>
+<tr><td>LLM strategy</td><td>Hybrid rules + LLM</td></tr>
+<tr><td>First LLM provider</td><td>Ollama</td></tr>
+<tr><td>LLM model</td><td>Configurable</td></tr>
+<tr><td>LLM fallback</td><td>Rules-only diagnosis if LLM fails</td></tr>
+<tr><td>Storage</td><td>SQLite + PostgreSQL via SQLAlchemy</td></tr>
+<tr><td>Operational memory</td><td>Basic incident history first; pattern memory later</td></tr>
+<tr><td>Observability</td><td>Container runtime + Prometheus + Grafana</td></tr>
+<tr><td>Logs</td><td>Runtime logs first; Loki later</td></tr>
+<tr><td>Severity</td><td>low / medium / high / critical first; impact × urgency later</td></tr>
+<tr><td>Incident lifecycle</td><td>new, analyzing, diagnosed, resolved, closed</td></tr>
+<tr><td>Resolution rule</td><td>3 successful health checks or manual resolve</td></tr>
+<tr><td>Monitored services</td><td>Explicit config + opt-in labels</td></tr>
+<tr><td>Runtime selection</td><td>Global default with per-service override</td></tr>
+<tr><td>Deployment correlation</td><td>Manual deployment events + image/container metadata</td></tr>
+<tr><td>First failure scenarios</td><td>FS-001 backend stopped; FS-002 DB down causing backend failure</td></tr>
+<tr><td>Analysis output</td><td>Structured JSON + SRE-style Markdown report</td></tr>
+<tr><td>Report format</td><td>SRE-style first; postmortem later</td></tr>
+<tr><td>Primary persona</td><td>Solo developer + portfolio/interview demo audience</td></tr>
+<tr><td>Success metric</td><td>Functional correctness + basic dashboard/demo polish</td></tr>
+<tr><td>Implementation style</td><td>Architecture skeleton + vertical slices</td></tr>
+<tr><td>Workflow orchestration</td><td>Internal workflow interface first; LangGraph adapter later</td></tr>
+<tr><td>Testing</td><td>Integration tests + golden-file evals + targeted unit tests</td></tr>
+<tr><td>Golden evals</td><td>Schema + key facts first; rubric later</td></tr>
+<tr><td>Prompts</td><td>Editable Markdown prompt files first; DB/UI later</td></tr>
+<tr><td>Config</td><td>.env + config.yaml first; DB-backed later</td></tr>
+<tr><td>Safety policy</td><td>Model future action catalogue, execute nothing in MVP</td></tr>
+<tr><td>Security</td><td>Localhost-only, no auth first; simple password later</td></tr>
+<tr><td>Repo shape</td><td>Monorepo with clear packages</td></tr>
+<tr><td>Compose strategy</td><td>One shared Compose spec, runtime overrides only when needed</td></tr>
+<tr><td>Docs</td><td>Markdown source + standalone visual HTML guide</td></tr>
+<tr><td>Dashboard style</td><td>Minimal admin dashboard first; portfolio polish later</td></tr>
+<tr><td>Dashboard refresh</td><td>HTMX partial refresh first; WebSockets later</td></tr>
+<tr><td>Navigation</td><td>Dashboard, Services, Incidents, Reports, Settings; Evals later</td></tr>
+<tr><td>Settings</td><td>Read-only config display first</td></tr>
+<tr><td>Reports</td><td>View/copy Markdown, download Markdown, export JSON; PDF later</td></tr>
+<tr><td>CLI</td><td>Analyze, list/show incidents, show/export reports, record deployment, trigger/reset scenarios</td></tr>
+<tr><td>Scenario runner</td><td>Predefined scripts only, scoped to demo app</td></tr>
+<tr><td>Definition of done</td><td>FS-001 and FS-002 end-to-end from CLI/UI, reports, evals, docs/demo script complete</td></tr>
+<tr><td>First deliverable</td><td>Foundation Pack</td></tr>
+</tbody></table>
+
+
+<h2>7. User Personas</h2>
+
+<h3>Persona 1: Solo Developer</h3>
+
+<p>Needs to understand why a local app is broken without manually checking every container and log.</p>
+
+<h3>Persona 2: Portfolio / Interview Audience</h3>
+
+<p>Needs to see agentic concepts clearly:</p>
+
+<ul><li>observe</li></ul>
+<ul><li>reason</li></ul>
+<ul><li>rank hypotheses</li></ul>
+<ul><li>recommend safe action</li></ul>
+<ul><li>report</li></ul>
+
+<h3>Persona 3: Future SRE User</h3>
+
+<p>Needs trustworthy evidence, safe controls, incident history, and portability to a server/cloud VM.</p>
+
+<h2>8. MVP User Journeys</h2>
+
+<h3>Journey 1: Manual Incident Analysis</h3>
+
+<ol><li>User opens dashboard.</li></ol>
+<ol><li>User sees backend service is unhealthy.</li></ol>
+<ol><li>User clicks **Analyze incident**.</li></ol>
+<ol><li>IncidentPilot collects evidence.</li></ol>
+<ol><li>IncidentPilot applies deterministic rules.</li></ol>
+<ol><li>IncidentPilot asks LLM to rank hypotheses and write report.</li></ol>
+<ol><li>User reviews recommendations and report.</li></ol>
+<ol><li>User manually resolves the underlying issue.</li></ol>
+<ol><li>IncidentPilot marks incident resolved after 3 successful checks, or user manually resolves it.</li></ol>
+<p>10. User closes the incident.</p>
+
+<h3>Journey 2: CLI Incident Analysis</h3>
+
+<pre><code>
+incidentpilot analyze --service backend
+
+incidentpilot incidents list
+
+incidentpilot reports show INC-001
+
+incidentpilot reports export-json INC-001
+
+</code></pre>
+
+<h3>Journey 3: Demo Failure Scenario</h3>
+
+<pre><code>
+incidentpilot scenarios trigger FS-001
+
+incidentpilot analyze --service backend
+
+incidentpilot reports show INC-001
+
+incidentpilot scenarios reset
+
+</code></pre>
+
+<h2>9. Functional Requirements</h2>
+
+<h3>FR-001: Service Configuration</h3>
+
+<p>IncidentPilot must support monitored services from:</p>
+
+<ul><li>explicit `config.yaml`</li></ul>
+<ul><li>opt-in container labels</li></ul>
+
+<h3>FR-002: Runtime Support</h3>
+
+<p>IncidentPilot must support Docker and Podman through adapter interfaces.</p>
+
+<h3>FR-003: Health Polling</h3>
+
+<p>IncidentPilot must poll configured health endpoints at configurable intervals, defaulting to 30 seconds.</p>
+
+<h3>FR-004: Manual Trigger</h3>
+
+<p>The user must be able to trigger incident analysis from both UI and CLI.</p>
+
+<h3>FR-005: Evidence Collection</h3>
+
+<p>For a target service, the agent must collect:</p>
+
+<ul><li>container status</li></ul>
+<ul><li>health check result</li></ul>
+<ul><li>recent runtime logs</li></ul>
+<ul><li>dependency status where configured/inferred</li></ul>
+<ul><li>selected Prometheus metrics where available</li></ul>
+<ul><li>image/container metadata</li></ul>
+<ul><li>related manual deployment events</li></ul>
+
+<h3>FR-006: Deterministic Rule Diagnosis</h3>
+
+<p>The rules layer must detect at least:</p>
+
+<ul><li>target container stopped</li></ul>
+<ul><li>target health check failing</li></ul>
+<ul><li>dependency container stopped/unhealthy</li></ul>
+<ul><li>LLM unavailable</li></ul>
+<ul><li>Prometheus unavailable</li></ul>
+
+<h3>FR-007: LLM Reasoning</h3>
+
+<p>The LLM must receive structured incident context, not unrestricted raw terminal access.</p>
+
+<p>It should produce:</p>
+
+<ul><li>ranked hypotheses</li></ul>
+<ul><li>confidence</li></ul>
+<ul><li>evidence references</li></ul>
+<ul><li>recommendation</li></ul>
+<ul><li>report draft</li></ul>
+
+<h3>FR-008: Degraded Mode</h3>
+
+<p>If the LLM times out:</p>
+
+<ol><li>Retry once.</li></ol>
+<ol><li>Produce rules-only diagnosis.</li></ol>
+<ol><li>Mark `llm_status: unavailable`.</li></ol>
+<ol><li>Show warning in UI and report.</li></ol>
+
+<h3>FR-009: Incident Report</h3>
+
+<p>Every incident analysis must produce:</p>
+
+<ul><li>structured JSON</li></ul>
+<ul><li>SRE-style Markdown report</li></ul>
+
+<h3>FR-010: Dashboard</h3>
+
+<p>MVP dashboard must include:</p>
+
+<ul><li>Dashboard</li></ul>
+<ul><li>Services</li></ul>
+<ul><li>Incidents</li></ul>
+<ul><li>Reports</li></ul>
+<ul><li>Settings</li></ul>
+
+<h3>FR-011: CLI</h3>
+
+<p>MVP CLI must support:</p>
+
+<ul><li>analyze service</li></ul>
+<ul><li>list/show incidents</li></ul>
+<ul><li>show/export reports</li></ul>
+<ul><li>record deployment event</li></ul>
+<ul><li>trigger/reset failure scenarios</li></ul>
+
+<h3>FR-012: Safety Policy</h3>
+
+<p>MVP must model future action catalogue but execute no action.</p>
+
+<h2>10. Non-Functional Requirements</h2>
+
+<h3>Reliability</h3>
+
+<p>Rules-only mode must still diagnose FS-001 and FS-002.</p>
+
+<h3>Safety</h3>
+
+<p>LLM must never receive arbitrary shell access. Remediation execution is disabled in MVP.</p>
+
+<h3>Portability</h3>
+
+<p>The app must run locally and be configurable for a single server/cloud VM later.</p>
+
+<h3>Observability</h3>
+
+<p>Prometheus and Grafana are included in MVP, but the agent must still work without Prometheus.</p>
+
+<h3>Maintainability</h3>
+
+<p>Use clean adapters for runtime, LLM, metrics, workflow, and storage.</p>
+
+<h3>Demo Quality</h3>
+
+<p>The MVP must include docs and demo script sufficient for a portfolio/interview walkthrough.</p>
+
+<h2>11. MVP Definition of Done</h2>
+
+<p>MVP Iteration 1 is done when:</p>
+
+<ul><li>demo app runs locally through Compose</li></ul>
+<ul><li>Docker and Podman paths are documented</li></ul>
+<ul><li>runtime adapters exist for both</li></ul>
+<ul><li>FS-001 works end-to-end</li></ul>
+<ul><li>FS-002 works end-to-end</li></ul>
+<ul><li>CLI can trigger scenarios, analyze incidents, and export reports</li></ul>
+<ul><li>UI shows dashboard, services, incidents, reports, and settings</li></ul>
+<ul><li>rules + LLM path works</li></ul>
+<ul><li>rules-only fallback works</li></ul>
+<ul><li>structured JSON and Markdown reports are generated</li></ul>
+<ul><li>golden-file evals pass</li></ul>
+<ul><li>agent executes no remediation</li></ul>
+<ul><li>setup guide, runbook, troubleshooting guide, eval guide, and demo script exist</li></ul></section>
+<section id="tab1" class="tab-content "><h1>IncidentPilot Story Map</h1>
+
+<h2>Backbone</h2>
+
+<ol><li>Configure monitored services</li></ol>
+<ol><li>Observe service health</li></ol>
+<ol><li>Detect incident candidate</li></ol>
+<ol><li>Collect evidence</li></ol>
+<ol><li>Diagnose with rules</li></ol>
+<ol><li>Enrich with LLM reasoning</li></ol>
+<ol><li>Recommend safe action</li></ol>
+<ol><li>Generate incident report</li></ol>
+<ol><li>Track incident lifecycle</li></ol>
+<p>10. Review from UI/CLI</p>
+<p>11. Run repeatable demo scenarios</p>
+<p>12. Evaluate behaviour</p>
+
+<hr>
+
+<h2>Release Slice 1: Architecture Skeleton</h2>
+
+<h3>User Activities</h3>
+
+<ul><li>Configure app</li></ul>
+<ul><li>Start dashboard</li></ul>
+<ul><li>Use CLI</li></ul>
+<ul><li>Store incidents</li></ul>
+
+<h3>Stories</h3>
+
+<ul><li>As a developer, I can start IncidentPilot locally.</li></ul>
+<ul><li>As a developer, I can configure Docker/Podman runtime settings.</li></ul>
+<ul><li>As a developer, I can configure monitored services in `config.yaml`.</li></ul>
+<ul><li>As a developer, I can open a dashboard on localhost.</li></ul>
+<ul><li>As a developer, I can run a CLI command.</li></ul>
+<ul><li>As the system, I can persist services, incidents, evidence, hypotheses, recommendations, reports, and agent runs.</li></ul>
+
+<h3>Acceptance Notes</h3>
+
+<ul><li>FastAPI app starts.</li></ul>
+<ul><li>Typer CLI works.</li></ul>
+<ul><li>SQLite database works.</li></ul>
+<ul><li>SQLAlchemy models are ready for PostgreSQL.</li></ul>
+<ul><li>Basic pages render.</li></ul>
+
+<hr>
+
+<h2>Release Slice 2: FS-001 Backend Container Stopped</h2>
+
+<h3>User Activity</h3>
+
+<p>Diagnose backend stopped incident.</p>
+
+<h3>Stories</h3>
+
+<ul><li>As a user, I can trigger `FS-001`.</li></ul>
+<ul><li>As the agent, I can detect that backend container is stopped.</li></ul>
+<ul><li>As the agent, I can collect backend status and recent logs.</li></ul>
+<ul><li>As the agent, I can classify severity as high.</li></ul>
+<ul><li>As the agent, I can recommend that the human restore/restart the backend.</li></ul>
+<ul><li>As a user, I can view the incident report in UI and CLI.</li></ul>
+
+<h3>Acceptance Notes</h3>
+
+<ul><li>Scenario runner stops only demo backend.</li></ul>
+<ul><li>Agent does not restart the backend.</li></ul>
+<ul><li>Diagnosis identifies backend stopped as rank-1 cause.</li></ul>
+<ul><li>JSON and Markdown report are generated.</li></ul>
+<ul><li>Golden eval passes.</li></ul>
+
+<hr>
+
+<h2>Release Slice 3: FS-002 DB Down Causing Backend Failure</h2>
+
+<h3>User Activity</h3>
+
+<p>Diagnose dependency failure.</p>
+
+<h3>Stories</h3>
+
+<ul><li>As a user, I can trigger `FS-002`.</li></ul>
+<ul><li>As the agent, I can detect backend health check failure.</li></ul>
+<ul><li>As the agent, I can check postgres dependency status.</li></ul>
+<ul><li>As the agent, I can avoid blaming backend incorrectly when DB is down.</li></ul>
+<ul><li>As the agent, I can recommend restoring the database first.</li></ul>
+<ul><li>As a user, I can compare FS-001 and FS-002 reports.</li></ul>
+
+<h3>Acceptance Notes</h3>
+
+<ul><li>Scenario runner stops only demo postgres.</li></ul>
+<ul><li>Backend becomes unhealthy.</li></ul>
+<ul><li>Diagnosis identifies DB dependency unavailable as rank-1 cause.</li></ul>
+<ul><li>Report includes dependency evidence.</li></ul>
+<ul><li>Golden eval passes.</li></ul>
+
+<hr>
+
+<h2>Release Slice 4: Health Polling and Incident History</h2>
+
+<h3>User Activity</h3>
+
+<p>Let the agent observe passively.</p>
+
+<h3>Stories</h3>
+
+<ul><li>As the system, I can poll service health at configured intervals.</li></ul>
+<ul><li>As the system, I can create incident candidates when a service becomes unhealthy.</li></ul>
+<ul><li>As the system, I can avoid duplicate noisy incidents for the same ongoing failure.</li></ul>
+<ul><li>As a user, I can view previous incidents.</li></ul>
+<ul><li>As a user, I can filter incidents by service, status, severity, and date.</li></ul>
+<ul><li>As the system, I can auto-resolve after 3 successful health checks.</li></ul>
+
+<h3>Acceptance Notes</h3>
+
+<ul><li>Default polling is 30 seconds.</li></ul>
+<ul><li>Per-service override works.</li></ul>
+<ul><li>Incident history is persisted.</li></ul>
+<ul><li>Manual resolve works.</li></ul>
+<ul><li>Auto-resolve works after 3 successful checks.</li></ul>
+
+<hr>
+
+<h2>Release Slice 5: Dashboard and Reports</h2>
+
+<h3>User Activity</h3>
+
+<p>Review and present the system.</p>
+
+<h3>Stories</h3>
+
+<ul><li>As a user, I can see service health cards.</li></ul>
+<ul><li>As a user, I can see incident list.</li></ul>
+<ul><li>As a user, I can open incident detail.</li></ul>
+<ul><li>As a user, I can view evidence, hypotheses, recommendations, and report.</li></ul>
+<ul><li>As a user, I can copy Markdown.</li></ul>
+<ul><li>As a user, I can download Markdown.</li></ul>
+<ul><li>As a user, I can export structured JSON.</li></ul>
+<ul><li>As a user, I can view read-only settings.</li></ul>
+
+<h3>Acceptance Notes</h3>
+
+<ul><li>HTMX partial refresh works.</li></ul>
+<ul><li>Dashboard feels demo-ready but minimal.</li></ul>
+<ul><li>Settings do not edit `.env` or YAML.</li></ul>
+<ul><li>Reports are accessible from incident detail and Reports page.</li></ul>
+
+<hr>
+
+<h2>Release Slice 6: Observability</h2>
+
+<h3>User Activity</h3>
+
+<p>Correlate runtime health with metrics.</p>
+
+<h3>Stories</h3>
+
+<ul><li>As the system, I can query Prometheus for selected metrics.</li></ul>
+<ul><li>As a user, I can open Grafana to inspect service metrics.</li></ul>
+<ul><li>As the agent, I can include metrics snapshot as evidence when available.</li></ul>
+<ul><li>As the system, I can continue diagnosis even if Prometheus is unavailable.</li></ul>
+
+<h3>Acceptance Notes</h3>
+
+<ul><li>Prometheus and Grafana run in Compose.</li></ul>
+<ul><li>Agent does not hard depend on Prometheus.</li></ul>
+<ul><li>Metrics evidence is marked unavailable when needed.</li></ul>
+
+<hr>
+
+<h2>Release Slice 7: Documentation and Demo Script</h2>
+
+<h3>User Activity</h3>
+
+<p>Run and explain the project.</p>
+
+<h3>Stories</h3>
+
+<ul><li>As a user, I can follow setup guide.</li></ul>
+<ul><li>As a user, I can follow demo script.</li></ul>
+<ul><li>As a user, I can run tests and evals.</li></ul>
+<ul><li>As a user, I can troubleshoot common local issues.</li></ul>
+<ul><li>As an interviewer, I can understand architecture from docs.</li></ul>
+
+<h3>Acceptance Notes</h3>
+
+<ul><li>Docs are in Markdown.</li></ul>
+<ul><li>Visual HTML guide exists.</li></ul>
+<ul><li>Demo script includes FS-001 and FS-002 walkthrough.</li></ul></section>
+<section id="tab2" class="tab-content "><h1>IncidentPilot Acceptance Criteria</h1>
+
+<h2>Global Acceptance Criteria</h2>
+
+<h3>AC-GEN-001: Local Startup</h3>
+
+<p>Given a fresh checkout, when the user follows the setup guide, then the demo app, IncidentPilot API, dashboard, database, Prometheus, and Grafana can be started locally.</p>
+
+<h3>AC-GEN-002: Localhost Safety</h3>
+
+<p>Given MVP default configuration, when the dashboard starts, then it binds to `127.0.0.1` and does not expose unauthenticated UI to the network.</p>
+
+<h3>AC-GEN-003: No Remediation Execution</h3>
+
+<p>Given any incident analysis in MVP, when the agent recommends an action, then it must not execute the action.</p>
+
+<h3>AC-GEN-004: Rules-Only Fallback</h3>
+
+<p>Given the LLM is unavailable or times out twice, when an analysis runs, then the system produces a rules-only diagnosis and marks `llm_status: unavailable`.</p>
+
+<hr>
+
+<h2>Service Configuration</h2>
+
+<h3>AC-CFG-001: Explicit Services</h3>
+
+<p>Given `config.yaml` defines a service, when the app starts, then the service appears in the Services page and CLI service list.</p>
+
+<h3>AC-CFG-002: Runtime Default</h3>
+
+<p>Given a global default runtime is configured, when a service does not override runtime, then the service uses the default runtime.</p>
+
+<h3>AC-CFG-003: Per-Service Runtime Override</h3>
+
+<p>Given a service declares `runtime: podman` or `runtime: docker`, when evidence is collected, then the correct runtime adapter is used.</p>
+
+<h3>AC-CFG-004: Opt-In Labels</h3>
+
+<p>Given a container has `devops-agent.monitor=true`, when discovery runs, then the service can be discovered as monitored.</p>
+
+<hr>
+
+<h2>Health Polling</h2>
+
+<h3>AC-HEALTH-001: Default Polling</h3>
+
+<p>Given no per-service polling interval, when health polling runs, then the default interval is 30 seconds.</p>
+
+<h3>AC-HEALTH-002: Per-Service Polling</h3>
+
+<p>Given a service has `polling_interval_seconds: 60`, when health polling runs, then that service uses 60 seconds.</p>
+
+<h3>AC-HEALTH-003: Incident Candidate</h3>
+
+<p>Given a monitored service becomes unhealthy, when polling observes the failure, then an incident candidate is created.</p>
+
+<h3>AC-HEALTH-004: Auto Resolution</h3>
+
+<p>Given an incident is open/diagnosed, when the related service passes health checks 3 consecutive times, then the incident can be marked resolved automatically.</p>
+
+<hr>
+
+<h2>FS-001: Backend Container Stopped</h2>
+
+<h3>AC-FS001-001: Trigger</h3>
+
+<p>Given the demo app is healthy, when the user runs `incidentpilot scenarios trigger FS-001`, then only the backend demo container is stopped.</p>
+
+<h3>AC-FS001-002: Detection</h3>
+
+<p>Given backend is stopped, when the user runs `incidentpilot analyze --service backend`, then the analysis detects that the backend container is not running.</p>
+
+<h3>AC-FS001-003: Rank-1 Cause</h3>
+
+<p>Given backend is stopped, when analysis completes, then rank-1 hypothesis is backend container stopped/unavailable.</p>
+
+<h3>AC-FS001-004: Recommendation</h3>
+
+<p>Given backend is stopped, when report is generated, then recommendation is to restore/start/restart backend manually, and execution is disabled in MVP.</p>
+
+<h3>AC-FS001-005: Report</h3>
+
+<p>Given FS-001 analysis completes, then structured JSON and Markdown report are saved and visible in UI/CLI.</p>
+
+<hr>
+
+<h2>FS-002: DB Down Causing Backend Failure</h2>
+
+<h3>AC-FS002-001: Trigger</h3>
+
+<p>Given the demo app is healthy, when the user runs `incidentpilot scenarios trigger FS-002`, then only the postgres demo container is stopped.</p>
+
+<h3>AC-FS002-002: Dependency Detection</h3>
+
+<p>Given postgres is stopped and backend is unhealthy, when the user analyzes backend, then the agent checks postgres dependency status.</p>
+
+<h3>AC-FS002-003: Rank-1 Cause</h3>
+
+<p>Given postgres is stopped and backend is unhealthy, when analysis completes, then rank-1 hypothesis is database dependency unavailable.</p>
+
+<h3>AC-FS002-004: Avoid False Blame</h3>
+
+<p>Given backend health is failing because DB is down, when analysis completes, then the agent must not rank backend application failure above DB dependency failure unless evidence supports it.</p>
+
+<h3>AC-FS002-005: Recommendation</h3>
+
+<p>Given FS-002 analysis completes, then recommendation is to restore postgres/database dependency first, and execution is disabled in MVP.</p>
+
+<hr>
+
+<h2>CLI</h2>
+
+<h3>AC-CLI-001: Analyze</h3>
+
+<p>`incidentpilot analyze --service backend` starts analysis and returns incident ID.</p>
+
+<h3>AC-CLI-002: Incidents List</h3>
+
+<p>`incidentpilot incidents list` shows recent incidents with ID, service, severity, status, and created time.</p>
+
+<h3>AC-CLI-003: Incident Show</h3>
+
+<p>`incidentpilot incidents show INC-001` shows incident detail.</p>
+
+<h3>AC-CLI-004: Report Show</h3>
+
+<p>`incidentpilot reports show INC-001` prints Markdown report.</p>
+
+<h3>AC-CLI-005: Export JSON</h3>
+
+<p>`incidentpilot reports export-json INC-001` exports structured JSON.</p>
+
+<h3>AC-CLI-006: Deployment Record</h3>
+
+<p>`incidentpilot deployments record --service backend --version v1 --notes &quot;...&quot;` stores manual deployment event.</p>
+
+<h3>AC-CLI-007: Scenario Reset</h3>
+
+<p>`incidentpilot scenarios reset` restores demo app to healthy baseline.</p>
+
+<hr>
+
+<h2>Dashboard</h2>
+
+<h3>AC-UI-001: Dashboard Page</h3>
+
+<p>The Dashboard page shows service health cards, active incidents, and recent diagnoses.</p>
+
+<h3>AC-UI-002: Services Page</h3>
+
+<p>The Services page shows configured services, runtime, health URL, polling interval, and criticality.</p>
+
+<h3>AC-UI-003: Incidents Page</h3>
+
+<p>The Incidents page shows incidents with status, severity, service, and creation time.</p>
+
+<h3>AC-UI-004: Incident Detail</h3>
+
+<p>Incident detail shows evidence, hypotheses, recommendations, and report.</p>
+
+<h3>AC-UI-005: Reports Page</h3>
+
+<p>Reports page supports view, copy Markdown, download Markdown, and export JSON.</p>
+
+<h3>AC-UI-006: Settings Page</h3>
+
+<p>Settings page shows read-only config, LLM provider/model, runtime, safety policy, and security state.</p>
+
+<hr>
+
+<h2>Evals</h2>
+
+<h3>AC-EVAL-001: Schema</h3>
+
+<p>All analysis JSON outputs must validate against the incident analysis schema.</p>
+
+<h3>AC-EVAL-002: FS-001 Key Facts</h3>
+
+<p>FS-001 eval passes only if backend stopped is detected and ranked as the likely cause.</p>
+
+<h3>AC-EVAL-003: FS-002 Key Facts</h3>
+
+<p>FS-002 eval passes only if DB dependency failure is detected and ranked as the likely cause.</p>
+
+<h3>AC-EVAL-004: No Unsafe Action</h3>
+
+<p>Eval fails if MVP output indicates an action was executed.</p>
+
+<h3>AC-EVAL-005: Report Sections</h3>
+
+<p>Markdown report must include summary, timeline, evidence, ranked hypotheses, recommendation, verification plan, and follow-up actions.</p></section>
+<section id="tab3" class="tab-content "><h1>IncidentPilot System Design and Architecture</h1>
+
+<h2>1. Architecture Principles</h2>
+
+<ul><li>Local-first, server/cloud portable.</li></ul>
+<ul><li>Safe by default.</li></ul>
+<ul><li>Read-only MVP.</li></ul>
+<ul><li>Runtime adapters isolate Docker/Podman differences.</li></ul>
+<ul><li>Rules establish operational truth; LLM explains and ranks.</li></ul>
+<ul><li>No unrestricted shell access.</li></ul>
+<ul><li>Structured outputs for testing and UI rendering.</li></ul>
+<ul><li>Degraded mode if LLM or Prometheus is unavailable.</li></ul>
+<ul><li>Markdown docs for Codex, HTML guide for human review.</li></ul>
+
+<h2>2. High-Level Architecture</h2>
+
+<pre><code>
++-------------------+       +-----------------------+
+
+| Web Dashboard     |       | CLI                   |
+
+| FastAPI/Jinja/HTMX|       | Typer                 |
+
++---------+---------+       +----------+------------+
+
+          |                            |
+
+          +-------------+--------------+
+
+                        |
+
+                +-------v--------+
+
+                | FastAPI API    |
+
+                | App Service    |
+
+                +-------+--------+
+
+                        |
+
+        +---------------+------------------+
+
+        |                                  |
+
++-------v--------+                +--------v---------+
+
+| Incident       |                | Health Poller    |
+
+| Workflow       |                | Service          |
+
++-------+--------+                +--------+---------+
+
+        |                                  |
+
+        +-------------+--------------------+
+
+                      |
+
+        +-------------v------------------------------+
+
+        | Evidence Collection Layer                   |
+
+        | runtime status, logs, health, metrics, deps |
+
+        +----+--------------+---------------+---------+
+
+             |              |               |
+
++------------v--+   +-------v--------+   +--v--------------+
+
+| Docker Adapter|   | Podman Adapter |   | Prometheus      |
+
++---------------+   +----------------+   | Metrics Adapter |
+
+                                          +-----------------+
+
+
+
+        +---------------------------------------------+
+
+        | Diagnosis Layer                             |
+
+        | deterministic rules + LLM reasoning          |
+
+        +----------------+----------------------------+
+
+                         |
+
+        +----------------v----------------------------+
+
+        | SQLAlchemy Storage                           |
+
+        | SQLite first, PostgreSQL compatible          |
+
+        +----------------+----------------------------+
+
+                         |
+
+        +----------------v----------------------------+
+
+        | Reports, JSON output, incident history       |
+
+        +---------------------------------------------+
+
+</code></pre>
+
+<h2>3. Component Responsibilities</h2>
+
+<h3>Web Dashboard</h3>
+
+<p>Technology: FastAPI + Jinja + HTMX.</p>
+
+<p>Responsibilities:</p>
+
+<ul><li>Show service health.</li></ul>
+<ul><li>Trigger manual analysis.</li></ul>
+<ul><li>Show incident list and detail.</li></ul>
+<ul><li>Show reports.</li></ul>
+<ul><li>Show read-only settings.</li></ul>
+<ul><li>Use HTMX partial refresh.</li></ul>
+
+<h3>CLI</h3>
+
+<p>Technology: Typer.</p>
+
+<p>Responsibilities:</p>
+
+<ul><li>Trigger analysis.</li></ul>
+<ul><li>List/show incidents.</li></ul>
+<ul><li>Show/export reports.</li></ul>
+<ul><li>Record deployment events.</li></ul>
+<ul><li>Trigger/reset demo scenarios.</li></ul>
+
+<h3>Runtime Adapter Layer</h3>
+
+<p>Common interface:</p>
+
+<pre><code>
+class ContainerRuntimeAdapter:
+
+    def list_containers(self) -&gt; list[ContainerSummary]: ...
+
+    def get_container_status(self, container_name: str) -&gt; ContainerStatus: ...
+
+    def get_recent_logs(self, container_name: str, since_seconds: int, max_bytes: int) -&gt; LogEvidence: ...
+
+    def inspect_healthcheck(self, container_name: str) -&gt; HealthCheckEvidence: ...
+
+    def get_container_metadata(self, container_name: str) -&gt; ContainerMetadata: ...
+
+</code></pre>
+
+<p>Implementations:</p>
+
+<ul><li>`DockerRuntimeAdapter`</li></ul>
+<ul><li>`PodmanRuntimeAdapter`</li></ul>
+
+<h3>Evidence Collector</h3>
+
+<p>Collects:</p>
+
+<ul><li>runtime status</li></ul>
+<ul><li>recent logs</li></ul>
+<ul><li>health endpoint result</li></ul>
+<ul><li>dependency statuses</li></ul>
+<ul><li>Prometheus metrics snapshot</li></ul>
+<ul><li>deployment metadata</li></ul>
+<ul><li>image/container metadata</li></ul>
+
+<h3>Rule Diagnosis Engine</h3>
+
+<p>Initial rules:</p>
+
+<ul><li>container stopped</li></ul>
+<ul><li>health endpoint failing</li></ul>
+<ul><li>dependency stopped/unhealthy</li></ul>
+<ul><li>missing evidence</li></ul>
+<ul><li>LLM unavailable</li></ul>
+<ul><li>Prometheus unavailable</li></ul>
+
+<h3>LLM Reasoning Adapter</h3>
+
+<p>First provider:</p>
+
+<ul><li>Ollama-compatible local model.</li></ul>
+
+<p>Config:</p>
+
+<pre><code>
+LLM_PROVIDER=ollama
+
+LLM_MODEL=qwen3:8b
+
+LLM_BASE_URL=http://localhost:11434
+
+LLM_TIMEOUT_SECONDS=120
+
+LLM_MAX_RETRIES=1
+
+</code></pre>
+
+<p>Future providers:</p>
+
+<ul><li>OpenAI-compatible API</li></ul>
+<ul><li>Anthropic</li></ul>
+<ul><li>OpenRouter</li></ul>
+<ul><li>local llama.cpp-compatible server</li></ul>
+
+<h3>Incident Workflow</h3>
+
+<p>MVP:</p>
+
+<pre><code>
+observe -&gt; collect evidence -&gt; apply rules -&gt; call LLM -&gt; rank hypotheses -&gt; recommend -&gt; report -&gt; persist
+
+</code></pre>
+
+<p>Interface:</p>
+
+<pre><code>
+class IncidentWorkflow:
+
+    def analyze_service(self, service_name: str, trigger: str) -&gt; IncidentAnalysisResult: ...
+
+</code></pre>
+
+<p>Implementations:</p>
+
+<ul><li>`PlainPythonIncidentWorkflow` for MVP</li></ul>
+<ul><li>`LangGraphIncidentWorkflow` later</li></ul>
+
+<h3>Storage</h3>
+
+<p>SQLAlchemy models with SQLite first and PostgreSQL compatibility.</p>
+
+<p>Entities:</p>
+
+<ul><li>Service</li></ul>
+<ul><li>HealthCheckResult</li></ul>
+<ul><li>DeploymentEvent</li></ul>
+<ul><li>Incident</li></ul>
+<ul><li>IncidentEvidence</li></ul>
+<ul><li>Hypothesis</li></ul>
+<ul><li>Recommendation</li></ul>
+<ul><li>IncidentReport</li></ul>
+<ul><li>AgentRun</li></ul>
+<ul><li>EvalRun</li></ul>
+
+<h2>4. Data Model Outline</h2>
+
+<h3>Service</h3>
+
+<ul><li>id</li></ul>
+<ul><li>name</li></ul>
+<ul><li>runtime</li></ul>
+<ul><li>container_name</li></ul>
+<ul><li>health_url</li></ul>
+<ul><li>polling_interval_seconds</li></ul>
+<ul><li>criticality</li></ul>
+<ul><li>labels</li></ul>
+<ul><li>enabled</li></ul>
+<ul><li>created_at</li></ul>
+<ul><li>updated_at</li></ul>
+
+<h3>Incident</h3>
+
+<ul><li>id</li></ul>
+<ul><li>service_id</li></ul>
+<ul><li>status</li></ul>
+<ul><li>severity</li></ul>
+<ul><li>trigger_type</li></ul>
+<ul><li>summary</li></ul>
+<ul><li>started_at</li></ul>
+<ul><li>detected_at</li></ul>
+<ul><li>diagnosed_at</li></ul>
+<ul><li>resolved_at</li></ul>
+<ul><li>closed_at</li></ul>
+<ul><li>llm_status</li></ul>
+
+<h3>IncidentEvidence</h3>
+
+<ul><li>id</li></ul>
+<ul><li>incident_id</li></ul>
+<ul><li>type</li></ul>
+<ul><li>source</li></ul>
+<ul><li>summary</li></ul>
+<ul><li>raw_ref</li></ul>
+<ul><li>collected_at</li></ul>
+
+<h3>Hypothesis</h3>
+
+<ul><li>id</li></ul>
+<ul><li>incident_id</li></ul>
+<ul><li>rank</li></ul>
+<ul><li>cause</li></ul>
+<ul><li>confidence</li></ul>
+<ul><li>evidence_refs</li></ul>
+<ul><li>reasoning</li></ul>
+
+<h3>Recommendation</h3>
+
+<ul><li>id</li></ul>
+<ul><li>incident_id</li></ul>
+<ul><li>action_key</li></ul>
+<ul><li>title</li></ul>
+<ul><li>rationale</li></ul>
+<ul><li>requires_approval</li></ul>
+<ul><li>allowed_by_policy</li></ul>
+<ul><li>execution_enabled_in_mvp</li></ul>
+<ul><li>executed</li></ul>
+
+<h3>IncidentReport</h3>
+
+<ul><li>id</li></ul>
+<ul><li>incident_id</li></ul>
+<ul><li>markdown</li></ul>
+<ul><li>json_payload</li></ul>
+<ul><li>created_at</li></ul>
+
+<h3>DeploymentEvent</h3>
+
+<ul><li>id</li></ul>
+<ul><li>service_id</li></ul>
+<ul><li>version</li></ul>
+<ul><li>notes</li></ul>
+<ul><li>image_name</li></ul>
+<ul><li>image_tag</li></ul>
+<ul><li>recorded_at</li></ul>
+
+<h3>AgentRun</h3>
+
+<ul><li>id</li></ul>
+<ul><li>incident_id</li></ul>
+<ul><li>workflow_version</li></ul>
+<ul><li>prompt_versions</li></ul>
+<ul><li>model</li></ul>
+<ul><li>started_at</li></ul>
+<ul><li>ended_at</li></ul>
+<ul><li>status</li></ul>
+<ul><li>error</li></ul>
+
+<h2>5. Configuration</h2>
+
+<h3>`.env`</h3>
+
+<pre><code>
+DATABASE_URL=sqlite:///./data/incidentpilot.db
+
+LLM_PROVIDER=ollama
+
+LLM_MODEL=qwen3:8b
+
+LLM_BASE_URL=http://localhost:11434
+
+LLM_TIMEOUT_SECONDS=120
+
+LLM_MAX_RETRIES=1
+
+HOST=127.0.0.1
+
+PORT=8080
+
+AUTH_ENABLED=false
+
+LOG_LEVEL=INFO
+
+</code></pre>
+
+<h3>`config.yaml`</h3>
+
+<pre><code>
+runtime:
+
+  default: docker
+
+  docker:
+
+    enabled: true
+
+  podman:
+
+    enabled: true
+
+
+
+polling:
+
+  default_interval_seconds: 30
+
+
+
+evidence:
+
+  logs_since_seconds: 900
+
+  logs_max_bytes: 50000
+
+
+
+services:
+
+  backend:
+
+    runtime: docker
+
+    container_name: incidentpilot-backend
+
+    health_url: http://localhost:8000/health
+
+    polling_interval_seconds: 30
+
+    criticality: high
+
+    dependencies:
+
+      - postgres
+
+
+
+  postgres:
+
+    runtime: docker
+
+    container_name: incidentpilot-postgres
+
+    health_url: null
+
+    polling_interval_seconds: 30
+
+    criticality: high
+
+
+
+safety_policy:
+
+  execution_enabled: false
+
+  actions:
+
+    restart_container:
+
+      allowed: true
+
+      execution_enabled_in_mvp: false
+
+      requires_approval: false
+
+      maximum_attempts: 1
+
+    rollback_last_deployment:
+
+      allowed: true
+
+      execution_enabled_in_mvp: false
+
+      requires_approval: true
+
+    delete_volume:
+
+      allowed: false
+
+      execution_enabled_in_mvp: false
+
+    run_arbitrary_shell:
+
+      allowed: false
+
+      execution_enabled_in_mvp: false
+
+</code></pre>
+
+<h2>6. Deployment Architecture</h2>
+
+<h3>Local MVP</h3>
+
+<ul><li>FastAPI app runs on localhost.</li></ul>
+<ul><li>SQLite database stored under `./data`.</li></ul>
+<ul><li>Demo app, Prometheus, Grafana run through Compose.</li></ul>
+<ul><li>Ollama runs locally on host or as configured.</li></ul>
+
+<h3>Future Single Server / Cloud VM</h3>
+
+<ul><li>FastAPI app behind reverse proxy.</li></ul>
+<ul><li>Auth enabled.</li></ul>
+<ul><li>PostgreSQL instead of SQLite.</li></ul>
+<ul><li>Prometheus/Grafana persisted volumes.</li></ul>
+<ul><li>Optional Loki and OpenTelemetry Collector.</li></ul>
+<ul><li>Strict runtime socket proxy.</li></ul>
+
+<h2>7. Safety Architecture</h2>
+
+<p>MVP safety rule:</p>
+
+<pre><code>
+Agent can recommend actions but cannot execute actions.
+
+</code></pre>
+
+<p>The action catalogue is modelled now to make the future self-healing boundary explicit.</p>
+
+<p>Blocked forever unless explicitly redesigned:</p>
+
+<ul><li>arbitrary shell</li></ul>
+<ul><li>delete volume</li></ul>
+<ul><li>destructive data operations</li></ul>
+
+<p>Future allowed with limits:</p>
+
+<ul><li>restart container, max once</li></ul>
+<ul><li>rollback deployment, approval required</li></ul>
+
+<h2>8. UI/UX Architecture</h2>
+
+<p>Pages:</p>
+
+<ul><li>Dashboard</li></ul>
+<ul><li>Services</li></ul>
+<ul><li>Incidents</li></ul>
+<ul><li>Reports</li></ul>
+<ul><li>Settings</li></ul>
+<ul><li>Evals later</li></ul>
+
+<p>Refresh:</p>
+
+<ul><li>HTMX partial refresh for health and incidents.</li></ul>
+<ul><li>WebSockets/SSE later.</li></ul>
+
+<h2>9. Observability</h2>
+
+<p>MVP:</p>
+
+<ul><li>Runtime logs from Docker/Podman.</li></ul>
+<ul><li>Prometheus metrics.</li></ul>
+<ul><li>Grafana dashboards.</li></ul>
+
+<p>Later:</p>
+
+<ul><li>Loki logs.</li></ul>
+<ul><li>OpenTelemetry Collector.</li></ul>
+<ul><li>GenAI/agent telemetry conventions.</li></ul></section>
+<section id="tab4" class="tab-content "><h1>IncidentPilot UI/UX Outline</h1>
+
+<h2>1. UI Principle</h2>
+
+<p>Start with a minimal admin dashboard that is professional, clear, and easy for Codex to implement. Later polish toward a dark DevOps/SRE portfolio showcase.</p>
+
+<h2>2. Navigation</h2>
+
+<p>MVP navigation:</p>
+
+<ol><li>Dashboard</li></ol>
+<ol><li>Services</li></ol>
+<ol><li>Incidents</li></ol>
+<ol><li>Reports</li></ol>
+<ol><li>Settings</li></ol>
+
+<p>Later:</p>
+
+<ol><li>Evals</li></ol>
+
+<h2>3. Dashboard Page</h2>
+
+<h3>Purpose</h3>
+
+<p>Show operational state at a glance.</p>
+
+<h3>Sections</h3>
+
+<ul><li>Service health cards</li></ul>
+<ul><li>Active incidents</li></ul>
+<ul><li>Recent diagnoses</li></ul>
+<ul><li>Quick actions:</li></ul>
+<ul><li>Analyze service</li></ul>
+<ul><li>Trigger FS-001</li></ul>
+<ul><li>Trigger FS-002</li></ul>
+<ul><li>Reset scenarios</li></ul>
+
+<h3>Health Card Fields</h3>
+
+<ul><li>service name</li></ul>
+<ul><li>runtime</li></ul>
+<ul><li>status</li></ul>
+<ul><li>severity/criticality</li></ul>
+<ul><li>last check time</li></ul>
+<ul><li>health URL</li></ul>
+<ul><li>latest incident link</li></ul>
+
+<h2>4. Services Page</h2>
+
+<h3>Purpose</h3>
+
+<p>Show monitored services and configuration.</p>
+
+<h3>Table Columns</h3>
+
+<ul><li>service</li></ul>
+<ul><li>runtime</li></ul>
+<ul><li>container</li></ul>
+<ul><li>health URL</li></ul>
+<ul><li>polling interval</li></ul>
+<ul><li>criticality</li></ul>
+<ul><li>dependencies</li></ul>
+<ul><li>current status</li></ul>
+<ul><li>actions</li></ul>
+
+<h3>Actions</h3>
+
+<ul><li>Analyze</li></ul>
+<ul><li>View incidents</li></ul>
+<ul><li>View config</li></ul>
+
+<h2>5. Incidents Page</h2>
+
+<h3>Purpose</h3>
+
+<p>Track incident lifecycle.</p>
+
+<h3>Table Columns</h3>
+
+<ul><li>incident ID</li></ul>
+<ul><li>service</li></ul>
+<ul><li>severity</li></ul>
+<ul><li>status</li></ul>
+<ul><li>trigger</li></ul>
+<ul><li>summary</li></ul>
+<ul><li>detected at</li></ul>
+<ul><li>resolved at</li></ul>
+<ul><li>actions</li></ul>
+
+<h3>Filters</h3>
+
+<ul><li>service</li></ul>
+<ul><li>severity</li></ul>
+<ul><li>status</li></ul>
+<ul><li>date</li></ul>
+
+<h2>6. Incident Detail Page</h2>
+
+<h3>Sections</h3>
+
+<ol><li>Header</li></ol>
+<ul><li>incident ID</li></ul>
+<ul><li>service</li></ul>
+<ul><li>severity</li></ul>
+<ul><li>status</li></ul>
+<ul><li>trigger</li></ul>
+<ol><li>Timeline</li></ol>
+<ul><li>detected</li></ul>
+<ul><li>analysis started</li></ul>
+<ul><li>evidence collected</li></ul>
+<ul><li>diagnosis completed</li></ul>
+<ul><li>resolved/closed</li></ul>
+<ol><li>Evidence</li></ol>
+<ul><li>container status</li></ul>
+<ul><li>health result</li></ul>
+<ul><li>dependency status</li></ul>
+<ul><li>logs summary</li></ul>
+<ul><li>metrics snapshot</li></ul>
+<ul><li>deployment metadata</li></ul>
+<ol><li>Ranked hypotheses</li></ol>
+<ul><li>rank</li></ul>
+<ul><li>cause</li></ul>
+<ul><li>confidence</li></ul>
+<ul><li>supporting evidence</li></ul>
+<ol><li>Recommendations</li></ol>
+<ul><li>action</li></ul>
+<ul><li>safety policy</li></ul>
+<ul><li>execution disabled in MVP</li></ul>
+<ol><li>Report</li></ol>
+<ul><li>rendered Markdown</li></ul>
+<ul><li>copy</li></ul>
+<ul><li>download Markdown</li></ul>
+<ul><li>export JSON</li></ul>
+
+<h2>7. Reports Page</h2>
+
+<h3>Purpose</h3>
+
+<p>Browse generated reports.</p>
+
+<h3>Capabilities</h3>
+
+<ul><li>View Markdown report</li></ul>
+<ul><li>Copy Markdown</li></ul>
+<ul><li>Download Markdown</li></ul>
+<ul><li>Export structured JSON</li></ul>
+<ul><li>PDF later</li></ul>
+
+<h2>8. Settings Page</h2>
+
+<h3>Purpose</h3>
+
+<p>Make runtime state transparent without editing config.</p>
+
+<h3>Read-Only Sections</h3>
+
+<ul><li>Runtime</li></ul>
+<ul><li>Services</li></ul>
+<ul><li>LLM</li></ul>
+<ul><li>Database</li></ul>
+<ul><li>Safety policy</li></ul>
+<ul><li>Polling</li></ul>
+<ul><li>Security</li></ul>
+
+<h2>9. HTMX Refresh</h2>
+
+<table>
+<thead><tr><th>Area</th><th>Behaviour</th></tr></thead><tbody>
+<tr><td>Service health cards</td><td>Refresh every 10–30 seconds</td></tr>
+<tr><td>Incident list</td><td>Refresh every 30 seconds</td></tr>
+<tr><td>Incident detail while analyzing</td><td>Partial refresh</td></tr>
+<tr><td>Reports</td><td>Static after generated</td></tr>
+</tbody></table>
+
+<h2>10. Visual Style</h2>
+
+<h3>MVP</h3>
+
+<ul><li>simple cards</li></ul>
+<ul><li>tables</li></ul>
+<ul><li>status badges</li></ul>
+<ul><li>confidence badges</li></ul>
+<ul><li>clean spacing</li></ul>
+<ul><li>readable Markdown report rendering</li></ul>
+
+<h3>Later Polish</h3>
+
+<ul><li>dark DevOps theme</li></ul>
+<ul><li>timeline visualisation</li></ul>
+<ul><li>evidence graph</li></ul>
+<ul><li>architecture diagram</li></ul>
+<ul><li>demo mode</li></ul>
+<ul><li>eval comparison cards</li></ul></section>
+<section id="tab5" class="tab-content "><h1>IncidentPilot Codex Development Plan</h1>
+
+<h2>1. Implementation Strategy</h2>
+
+<p>Use <strong>architecture skeleton first, then vertical slices</strong>.</p>
+
+<p>This is important because Codex should work against a clear structure, but each feature must become testable end-to-end quickly.</p>
+
+<h2>2. Proposed Repository Structure</h2>
+
+<pre><code>
+incident-devops-agent/
+
+  agent/
+
+    app/
+
+      main.py
+
+      config.py
+
+      database.py
+
+      models/
+
+      services/
+
+      web/
+
+      templates/
+
+      static/
+
+    cli/
+
+      main.py
+
+    workflows/
+
+      base.py
+
+      plain_python.py
+
+    adapters/
+
+      runtime/
+
+        base.py
+
+        docker_adapter.py
+
+        podman_adapter.py
+
+      llm/
+
+        base.py
+
+        ollama_adapter.py
+
+      metrics/
+
+        prometheus_adapter.py
+
+    prompts/
+
+      incident_diagnosis.md
+
+      incident_report.md
+
+      hypothesis_ranking.md
+
+    tests/
+
+
+
+  demo-app/
+
+    frontend/
+
+    backend/
+
+    db/
+
+    failure-scenarios/
+
+
+
+  infra/
+
+    compose.yaml
+
+    compose.docker.override.yaml
+
+    compose.podman.override.yaml
+
+    prometheus/
+
+    grafana/
+
+
+
+  docs/
+
+    prd/
+
+    story-map/
+
+    acceptance-criteria/
+
+    architecture/
+
+    implementation/
+
+    evals/
+
+    runbooks/
+
+    incidentpilot-foundation-guide.html
+
+
+
+  tests/
+
+    integration/
+
+    golden-files/
+
+    fixtures/
+
+</code></pre>
+
+<h2>3. Build Phases</h2>
+
+<h3>Phase 0: Project Bootstrap</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Create repo structure.</li></ul>
+<ul><li>Add Python package setup.</li></ul>
+<ul><li>Add FastAPI app shell.</li></ul>
+<ul><li>Add Typer CLI shell.</li></ul>
+<ul><li>Add SQLAlchemy database setup.</li></ul>
+<ul><li>Add `.env.example`.</li></ul>
+<ul><li>Add `config.example.yaml`.</li></ul>
+<ul><li>Add basic tests.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>API starts.</li></ul>
+<ul><li>CLI runs.</li></ul>
+<ul><li>DB migration/create works.</li></ul>
+<ul><li>Health page renders.</li></ul>
+
+<h3>Phase 1: Demo App and Compose</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Create backend service with `/health`.</li></ul>
+<ul><li>Create frontend placeholder.</li></ul>
+<ul><li>Create postgres dependency.</li></ul>
+<ul><li>Add Compose spec.</li></ul>
+<ul><li>Add Prometheus and Grafana baseline.</li></ul>
+<ul><li>Add failure scenario scripts for FS-001 and FS-002.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>Demo app starts healthy.</li></ul>
+<ul><li>FS-001 stops backend.</li></ul>
+<ul><li>FS-002 stops postgres.</li></ul>
+<ul><li>Reset restores healthy state.</li></ul>
+
+<h3>Phase 2: Runtime Adapters</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Define runtime adapter interface.</li></ul>
+<ul><li>Implement Docker adapter.</li></ul>
+<ul><li>Implement Podman adapter.</li></ul>
+<ul><li>Add service config loading.</li></ul>
+<ul><li>Add recent log collection.</li></ul>
+<ul><li>Add container metadata collection.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>CLI can show service runtime status.</li></ul>
+<ul><li>Tests cover adapter interface with mocks.</li></ul>
+<ul><li>At least one runtime path is integration-tested.</li></ul>
+
+<h3>Phase 3: Evidence Collection</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Implement health endpoint checker.</li></ul>
+<ul><li>Implement dependency checker.</li></ul>
+<ul><li>Implement runtime log collector.</li></ul>
+<ul><li>Implement Prometheus metrics adapter.</li></ul>
+<ul><li>Store evidence in DB.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>Evidence exists for FS-001 and FS-002.</li></ul>
+<ul><li>Evidence is structured and referenceable.</li></ul>
+
+<h3>Phase 4: Rules Diagnosis</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Implement rule engine.</li></ul>
+<ul><li>Detect container stopped.</li></ul>
+<ul><li>Detect health failing.</li></ul>
+<ul><li>Detect dependency down.</li></ul>
+<ul><li>Assign severity.</li></ul>
+<ul><li>Generate baseline hypotheses and recommendations.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>Rules-only diagnosis passes FS-001 and FS-002 evals.</li></ul>
+
+<h3>Phase 5: LLM Adapter and Prompts</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Implement Ollama adapter.</li></ul>
+<ul><li>Add retry and timeout logic.</li></ul>
+<ul><li>Add prompt files.</li></ul>
+<ul><li>Send structured context to LLM.</li></ul>
+<ul><li>Parse structured JSON response.</li></ul>
+<ul><li>Fall back to rules-only mode.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>LLM path works.</li></ul>
+<ul><li>Timeout fallback works.</li></ul>
+<ul><li>LLM output validates schema.</li></ul>
+
+<h3>Phase 6: Incident Workflow</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Implement `IncidentWorkflow` interface.</li></ul>
+<ul><li>Implement `PlainPythonIncidentWorkflow`.</li></ul>
+<ul><li>Persist incident lifecycle.</li></ul>
+<ul><li>Persist agent runs.</li></ul>
+<ul><li>Generate final JSON and Markdown report.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>`incidentpilot analyze --service backend` works end-to-end.</li></ul>
+
+<h3>Phase 7: CLI</h3>
+
+<p>Tasks:</p>
+
+<ul><li>`analyze`</li></ul>
+<ul><li>`incidents list`</li></ul>
+<ul><li>`incidents show`</li></ul>
+<ul><li>`reports show`</li></ul>
+<ul><li>`reports export-json`</li></ul>
+<ul><li>`reports download-markdown`</li></ul>
+<ul><li>`deployments record`</li></ul>
+<ul><li>`scenarios trigger`</li></ul>
+<ul><li>`scenarios reset`</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>FS-001 and FS-002 can be run from CLI.</li></ul>
+
+<h3>Phase 8: Dashboard</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Dashboard page.</li></ul>
+<ul><li>Services page.</li></ul>
+<ul><li>Incidents page.</li></ul>
+<ul><li>Incident detail page.</li></ul>
+<ul><li>Reports page.</li></ul>
+<ul><li>Settings page.</li></ul>
+<ul><li>HTMX partial refresh.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>FS-001 and FS-002 can be analysed and reviewed from UI.</li></ul>
+
+<h3>Phase 9: Testing and Evals</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Integration tests for FS-001.</li></ul>
+<ul><li>Integration tests for FS-002.</li></ul>
+<ul><li>Golden-file evals.</li></ul>
+<ul><li>Schema validation.</li></ul>
+<ul><li>Unit tests for rules and config.</li></ul>
+<ul><li>UI smoke tests.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>MVP eval suite passes.</li></ul>
+
+<h3>Phase 10: Docs and Demo Script</h3>
+
+<p>Tasks:</p>
+
+<ul><li>Setup guide.</li></ul>
+<ul><li>Architecture overview.</li></ul>
+<ul><li>Runbook.</li></ul>
+<ul><li>Testing/evals guide.</li></ul>
+<ul><li>Troubleshooting.</li></ul>
+<ul><li>Portfolio/interview demo script.</li></ul>
+
+<p>Done when:</p>
+
+<ul><li>A new user can run the demo from docs.</li></ul>
+
+<h2>4. Codex Working Rules</h2>
+
+<ul><li>Work in small vertical slices.</li></ul>
+<ul><li>Do not add remediation execution.</li></ul>
+<ul><li>Do not add arbitrary shell execution.</li></ul>
+<ul><li>Keep runtime-specific code inside adapters.</li></ul>
+<ul><li>Keep prompts in files.</li></ul>
+<ul><li>Keep output schema stable.</li></ul>
+<ul><li>Add tests with every behaviour change.</li></ul>
+<ul><li>Prefer simple implementation over premature LangGraph complexity.</li></ul>
+<ul><li>Maintain Docker and Podman abstraction.</li></ul></section>
+<section id="tab6" class="tab-content "><h1>IncidentPilot Testing and Evaluation Plan</h1>
+
+<h2>1. Testing Philosophy</h2>
+
+<p>IncidentPilot must prove behaviour, not just code coverage.</p>
+
+<p>The MVP is successful only if the system diagnoses the intended failure scenarios correctly, explains evidence, generates reports, and remains safe.</p>
+
+<h2>2. Test Types</h2>
+
+<table>
+<thead><tr><th>Test Type</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>Unit tests</td><td>Rules, config, adapters, schema</td></tr>
+<tr><td>Integration tests</td><td>Demo app + runtime + analysis</td></tr>
+<tr><td>Golden-file evals</td><td>Validate key facts and schema</td></tr>
+<tr><td>UI smoke tests</td><td>Ensure pages render and navigation works</td></tr>
+<tr><td>Degraded-mode tests</td><td>LLM unavailable / Prometheus unavailable</td></tr>
+</tbody></table>
+
+<h2>3. MVP Failure Scenarios</h2>
+
+<h3>FS-001: Backend Container Stopped</h3>
+
+<p>Setup:</p>
+
+<pre><code>
+incidentpilot scenarios trigger FS-001
+
+</code></pre>
+
+<p>Expected:</p>
+
+<ul><li>backend container stopped</li></ul>
+<ul><li>backend health unavailable</li></ul>
+<ul><li>rank-1 hypothesis: backend container stopped</li></ul>
+<ul><li>severity: high</li></ul>
+<ul><li>recommendation: manually restore/restart backend</li></ul>
+<ul><li>no action executed</li></ul>
+
+<h3>FS-002: DB Down Causing Backend Failure</h3>
+
+<p>Setup:</p>
+
+<pre><code>
+incidentpilot scenarios trigger FS-002
+
+</code></pre>
+
+<p>Expected:</p>
+
+<ul><li>postgres stopped</li></ul>
+<ul><li>backend unhealthy</li></ul>
+<ul><li>rank-1 hypothesis: database dependency unavailable</li></ul>
+<ul><li>recommendation: restore database dependency first</li></ul>
+<ul><li>no action executed</li></ul>
+
+<h2>4. Golden-File Eval Strategy</h2>
+
+<p>Use schema + key facts matching.</p>
+
+<p>Do not require exact Markdown wording because local LLM output may vary.</p>
+
+<h3>Required Checks</h3>
+
+<ul><li>JSON schema valid</li></ul>
+<ul><li>incident ID present</li></ul>
+<ul><li>service name correct</li></ul>
+<ul><li>severity present</li></ul>
+<ul><li>status present</li></ul>
+<ul><li>evidence exists</li></ul>
+<ul><li>ranked hypotheses exist</li></ul>
+<ul><li>recommendations exist</li></ul>
+<ul><li>report Markdown exists</li></ul>
+<ul><li>no remediation executed</li></ul>
+<ul><li>correct rank-1 cause for scenario</li></ul>
+
+<h2>5. Eval Output Contract</h2>
+
+<pre><code>
+{
+
+  &quot;scenario_id&quot;: &quot;FS-001&quot;,
+
+  &quot;passed&quot;: true,
+
+  &quot;checks&quot;: [
+
+    {
+
+      &quot;name&quot;: &quot;schema_valid&quot;,
+
+      &quot;passed&quot;: true
+
+    },
+
+    {
+
+      &quot;name&quot;: &quot;rank1_cause_correct&quot;,
+
+      &quot;passed&quot;: true,
+
+      &quot;expected&quot;: &quot;backend_container_stopped&quot;,
+
+      &quot;actual&quot;: &quot;backend_container_stopped&quot;
+
+    }
+
+  ],
+
+  &quot;model&quot;: &quot;qwen3:8b&quot;,
+
+  &quot;prompt_versions&quot;: {
+
+    &quot;incident_diagnosis&quot;: &quot;v1&quot;
+
+  }
+
+}
+
+</code></pre>
+
+<h2>6. Degraded Mode Evals</h2>
+
+<h3>LLM Unavailable</h3>
+
+<p>Given Ollama is unavailable, analysis should:</p>
+
+<ul><li>retry once</li></ul>
+<ul><li>produce rules-only diagnosis</li></ul>
+<ul><li>mark `llm_status: unavailable`</li></ul>
+<ul><li>pass FS-001 and FS-002 key fact checks</li></ul>
+
+<h3>Prometheus Unavailable</h3>
+
+<p>Given Prometheus is unavailable, analysis should:</p>
+
+<ul><li>mark metrics evidence unavailable</li></ul>
+<ul><li>continue with runtime and health evidence</li></ul>
+<ul><li>still pass FS-001 and FS-002</li></ul>
+
+<h2>7. Future Report Quality Rubric</h2>
+
+<p>Later, score reports on:</p>
+
+<ul><li>clarity</li></ul>
+<ul><li>evidence grounding</li></ul>
+<ul><li>hypothesis quality</li></ul>
+<ul><li>recommendation safety</li></ul>
+<ul><li>verification plan usefulness</li></ul>
+<ul><li>SRE trustworthiness</li></ul></section>
+<section id="tab7" class="tab-content "><h1>IncidentPilot MVP Runbook and Demo Script</h1>
+
+<h2>1. Demo Objective</h2>
+
+<p>Show that IncidentPilot can diagnose containerised application failures safely and explainably.</p>
+
+<p>The MVP demonstrates:</p>
+
+<ul><li>local-first DevOps agent</li></ul>
+<ul><li>Docker/Podman support</li></ul>
+<ul><li>health polling</li></ul>
+<ul><li>manual analysis</li></ul>
+<ul><li>runtime evidence collection</li></ul>
+<ul><li>rules + LLM diagnosis</li></ul>
+<ul><li>structured JSON output</li></ul>
+<ul><li>SRE-style report</li></ul>
+<ul><li>no remediation execution</li></ul>
+
+<h2>2. Setup Flow</h2>
+
+<pre><code>
+git clone &lt;repo-url&gt;
+
+cd incident-devops-agent
+
+cp .env.example .env
+
+cp config.example.yaml config.yaml
+
+</code></pre>
+
+<p>Start demo stack:</p>
+
+<pre><code>
+docker compose -f infra/compose.yaml up -d
+
+</code></pre>
+
+<p>or Podman path:</p>
+
+<pre><code>
+podman compose -f infra/compose.yaml up -d
+
+</code></pre>
+
+<p>Start IncidentPilot:</p>
+
+<pre><code>
+incidentpilot web
+
+</code></pre>
+
+<p>Open:</p>
+
+<pre><code>
+http://127.0.0.1:8080
+
+</code></pre>
+
+<h2>3. Demo Walkthrough</h2>
+
+<h3>Step 1: Healthy Baseline</h3>
+
+<p>Show:</p>
+
+<ul><li>Dashboard service cards are healthy.</li></ul>
+<ul><li>Services page shows backend, frontend, postgres.</li></ul>
+<ul><li>Settings page shows read-only runtime, LLM, safety policy.</li></ul>
+
+<h3>Step 2: Trigger FS-001</h3>
+
+<pre><code>
+incidentpilot scenarios trigger FS-001
+
+</code></pre>
+
+<p>Expected:</p>
+
+<ul><li>backend stops</li></ul>
+<ul><li>dashboard shows backend unhealthy</li></ul>
+<ul><li>incident candidate appears, or user triggers manual analysis</li></ul>
+
+<p>Run:</p>
+
+<pre><code>
+incidentpilot analyze --service backend
+
+</code></pre>
+
+<p>Show:</p>
+
+<ul><li>rank-1 cause: backend container stopped</li></ul>
+<ul><li>evidence: container status/logs/health</li></ul>
+<ul><li>recommendation: manually restore/restart backend</li></ul>
+<ul><li>execution disabled in MVP</li></ul>
+<ul><li>SRE report generated</li></ul>
+
+<h3>Step 3: Reset</h3>
+
+<pre><code>
+incidentpilot scenarios reset
+
+</code></pre>
+
+<p>Expected:</p>
+
+<ul><li>backend healthy again</li></ul>
+<ul><li>incident resolved after 3 checks or manually resolved</li></ul>
+
+<h3>Step 4: Trigger FS-002</h3>
+
+<pre><code>
+incidentpilot scenarios trigger FS-002
+
+</code></pre>
+
+<p>Run:</p>
+
+<pre><code>
+incidentpilot analyze --service backend
+
+</code></pre>
+
+<p>Show:</p>
+
+<ul><li>backend unhealthy</li></ul>
+<ul><li>postgres stopped</li></ul>
+<ul><li>rank-1 cause: database dependency unavailable</li></ul>
+<ul><li>recommendation: restore DB first</li></ul>
+<ul><li>report includes dependency evidence</li></ul>
+
+<h3>Step 5: Reports</h3>
+
+<p>Show:</p>
+
+<ul><li>Reports page</li></ul>
+<ul><li>copy Markdown</li></ul>
+<ul><li>download Markdown</li></ul>
+<ul><li>export JSON</li></ul>
+
+<h3>Step 6: Safety Architecture</h3>
+
+<p>Show Settings safety policy:</p>
+
+<ul><li>restart_container modelled but disabled</li></ul>
+<ul><li>rollback modelled but disabled</li></ul>
+<ul><li>delete_volume blocked</li></ul>
+<ul><li>arbitrary shell blocked</li></ul>
+
+<h2>4. Interview Talking Points</h2>
+
+<ul><li>I started with read-only triage before self-healing to prove diagnosis correctness.</li></ul>
+<ul><li>I separated deterministic evidence collection from LLM reasoning.</li></ul>
+<ul><li>The LLM never receives unrestricted terminal access.</li></ul>
+<ul><li>Docker and Podman are isolated behind runtime adapters.</li></ul>
+<ul><li>Golden-file evals check key facts instead of brittle exact wording.</li></ul>
+<ul><li>The action catalogue is modelled early but execution is disabled in MVP.</li></ul>
+<ul><li>The project is local-first but designed for a single server/cloud VM.</li></ul>
+<ul><li>The workflow interface allows LangGraph later without blocking the MVP.</li></ul>
+
+<h2>5. Troubleshooting</h2>
+
+<h3>Dashboard does not open</h3>
+
+<p>Check:</p>
+
+<pre><code>
+incidentpilot web --host 127.0.0.1 --port 8080
+
+</code></pre>
+
+<h3>Ollama timeout</h3>
+
+<p>Check:</p>
+
+<pre><code>
+curl http://localhost:11434/api/tags
+
+</code></pre>
+
+<p>If unavailable, IncidentPilot should use rules-only mode.</p>
+
+<h3>Docker permission issue</h3>
+
+<p>Check:</p>
+
+<pre><code>
+docker ps
+
+</code></pre>
+
+<h3>Podman issue</h3>
+
+<p>Check:</p>
+
+<pre><code>
+podman ps
+
+</code></pre>
+
+<h3>Prometheus unavailable</h3>
+
+<p>The agent should continue diagnosis and mark metrics evidence unavailable.</p>
+
+<h2>6. Demo Reset</h2>
+
+<pre><code>
+incidentpilot scenarios reset
+
+incidentpilot incidents list
+
+</code></pre></section>
+</main>
+</div>
+<script>
+document.querySelectorAll('.tab-button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+from __future__ import annotations
+
+import asyncio
+from pathlib import Path
+
+import httpx
+
+from agent.app.config import Settings
+from agent.app.database import create_session_factory, initialise_database
+from agent.app.main import create_app
+from agent.app.services import (
+    add_evidence,
+    add_hypotheses,
+    add_recommendations,
+    create_incident,
+    create_service,
+    save_report,
+)
+from agent.workflows import IncidentAnalysisResult
+
+
+def web_settings(database_url: str) -> Settings:
+    return Settings.model_validate(
+        {
+            "database": {"url": database_url},
+            "services": [
+                {
+                    "name": "backend",
+                    "runtime": "docker",
+                    "container_name": "incidentpilot-demo-backend",
+                    "health_url": "http://127.0.0.1:8001/health",
+                    "polling_interval_seconds": 30,
+                    "criticality": "high",
+                    "dependencies": ["postgres"],
+                },
+                {
+                    "name": "postgres",
+                    "runtime": "docker",
+                    "container_name": "incidentpilot-demo-postgres",
+                    "criticality": "high",
+                    "dependencies": [],
+                },
+            ],
+        }
+    )
+
+
+def seed_incident(settings: Settings) -> int:
+    engine = initialise_database(settings)
+    factory = create_session_factory(engine)
+    with factory() as session:
+        service = create_service(
+            session,
+            name="backend",
+            runtime="docker",
+            container_name="incidentpilot-demo-backend",
+            health_url="http://127.0.0.1:8001/health",
+            criticality="high",
+            dependencies=["postgres"],
+        )
+        incident = create_incident(
+            session,
+            service_id=service.id,
+            trigger_type="manual",
+            status="diagnosed",
+            severity="high",
+            summary="Backend container stopped",
+            llm_status="available",
+        )
+        evidence = add_evidence(
+            session,
+            incident_id=incident.id,
+            type="container_status",
+            source="docker",
+            summary="Backend is exited",
+            raw_payload={"running": False},
+        )
+        add_hypotheses(
+            session,
+            incident_id=incident.id,
+            hypotheses=[
+                {
+                    "rank": 1,
+                    "cause": "backend_container_stopped",
+                    "confidence": 0.99,
+                    "evidence_refs": [f"evidence:{evidence.id}"],
+                    "reasoning": "Runtime reports the container exited.",
+                }
+            ],
+        )
+        add_recommendations(
+            session,
+            incident_id=incident.id,
+            recommendations=[
+                {
+                    "action_key": "restart_container",
+                    "title": "Restore backend manually",
+                    "rationale": "A human should restore the service.",
+                    "requires_approval": True,
+                    "allowed_by_policy": False,
+                }
+            ],
+        )
+        save_report(
+            session,
+            incident_id=incident.id,
+            markdown="# Incident Report\n\nNo remediation executed.",
+            json_payload={
+                "incident_id": incident.id,
+                "service": "backend",
+                "executed": False,
+            },
+        )
+        incident_id = incident.id
+    engine.dispose()
+    return incident_id
+
+
+async def request(
+    app,
+    method: str,
+    path: str,
+    *,
+    follow_redirects: bool = True,
+) -> httpx.Response:
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        follow_redirects=follow_redirects,
+    ) as client:
+        return await client.request(method, path)
+
+
+def test_all_dashboard_pages_render_with_sample_incident(
+    tmp_path: Path,
+) -> None:
+    settings = web_settings(f"sqlite:///{tmp_path / 'web.db'}")
+    incident_id = seed_incident(settings)
+    app = create_app(settings)
+
+    pages = {
+        "/": "Dashboard",
+        "/services": "Services",
+        "/incidents": "Incidents",
+        f"/incidents/{incident_id}": "Ranked hypotheses",
+        "/reports": "Reports",
+        "/settings": "Safety policy",
+    }
+    for path, expected in pages.items():
+        response = asyncio.run(request(app, "GET", path))
+        assert response.status_code == 200, path
+        assert expected in response.text
+
+    detail = asyncio.run(
+        request(app, "GET", f"/incidents/{incident_id}")
+    )
+    assert "backend_container_stopped" in detail.text
+    assert "Execution disabled in MVP" in detail.text
+    assert "No remediation executed" in detail.text
+
+
+def test_htmx_partials_render(tmp_path: Path) -> None:
+    settings = web_settings(f"sqlite:///{tmp_path / 'partials.db'}")
+    seed_incident(settings)
+    app = create_app(settings)
+
+    cards = asyncio.run(
+        request(app, "GET", "/partials/service-cards")
+    )
+    incidents = asyncio.run(
+        request(app, "GET", "/partials/incidents")
+    )
+
+    assert cards.status_code == 200
+    assert "Analyze service" in cards.text
+    assert incidents.status_code == 200
+    assert "INC-001" in incidents.text
+
+
+def test_settings_hides_database_and_provider_secrets() -> None:
+    settings = Settings.model_validate(
+        {
+            "database": {
+                "url": "postgresql://secret-user:super-secret@db/incidentpilot"
+            },
+            "llm": {
+                "provider": "ollama",
+                "model": "safe-model",
+                "base_url": "http://token-value@ollama:11434",
+            },
+        }
+    )
+    app = create_app(settings)
+
+    response = asyncio.run(request(app, "GET", "/settings"))
+
+    assert response.status_code == 200
+    assert "postgresql" in response.text
+    assert "safe-model" in response.text
+    assert "super-secret" not in response.text
+    assert "secret-user" not in response.text
+    assert "token-value" not in response.text
+
+
+def test_analyze_action_calls_workflow_and_redirects(
+    tmp_path: Path,
+) -> None:
+    settings = web_settings(f"sqlite:///{tmp_path / 'analyze.db'}")
+    seed_incident(settings)
+    app = create_app(settings)
+    calls: list[tuple[str, str]] = []
+
+    class Workflow:
+        def analyze_service(self, service_name: str, trigger_type: str):
+            calls.append((service_name, trigger_type))
+            return IncidentAnalysisResult(
+                incident_id=1,
+                incident_ref="INC-001",
+                summary="done",
+                severity="high",
+                llm_status="available",
+            )
+
+    app.state.workflow_factory = lambda settings, session: Workflow()
+
+    response = asyncio.run(
+        request(
+            app,
+            "POST",
+            "/actions/analyze/backend",
+            follow_redirects=False,
+        )
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/incidents/1"
+    assert calls == [("backend", "web_manual")]
+
+
+def test_report_export_and_download_routes(tmp_path: Path) -> None:
+    settings = web_settings(f"sqlite:///{tmp_path / 'exports.db'}")
+    incident_id = seed_incident(settings)
+    app = create_app(settings)
+
+    exported = asyncio.run(
+        request(app, "GET", f"/reports/{incident_id}/export.json")
+    )
+    downloaded = asyncio.run(
+        request(app, "GET", f"/reports/{incident_id}/download.md")
+    )
+
+    assert exported.status_code == 200
+    assert exported.json()["service"] == "backend"
+    assert exported.json()["executed"] is False
+    assert downloaded.status_code == 200
+    assert downloaded.text.startswith("# Incident Report")
+    assert 'filename="INC-001.md"' in downloaded.headers[
+        "content-disposition"
+    ]

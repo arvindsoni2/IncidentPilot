@@ -1,0 +1,21 @@
+<div class="card-grid">
+  {% for card in service_cards %}
+  <article class="service-card">
+    <div class="card-top">
+      <span class="status-dot {{ card.status }}"></span>
+      <span class="status-pill">{{ card.status }}</span>
+    </div>
+    <h3>{{ card.service.name }}</h3>
+    <p>{{ card.service.runtime }} · {{ card.service.container_name }}</p>
+    <dl>
+      <div><dt>Criticality</dt><dd>{{ card.service.criticality }}</dd></div>
+      <div><dt>Last check</dt><dd>{{ card.last_check.strftime('%H:%M:%S') if card.last_check else 'Not checked' }}</dd></div>
+    </dl>
+    <form method="post" action="/actions/analyze/{{ card.service.name }}" hx-post="/actions/analyze/{{ card.service.name }}">
+      <button class="button primary">Analyze service</button>
+    </form>
+  </article>
+  {% else %}
+  <div class="empty-state">No services configured. Copy <code>config.example.yaml</code> to <code>config.yaml</code>.</div>
+  {% endfor %}
+</div>

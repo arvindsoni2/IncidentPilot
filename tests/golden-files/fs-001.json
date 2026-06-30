@@ -1,0 +1,7 @@
+{
+  "scenario_id": "FS-001",
+  "service": "backend",
+  "rank1_cause": "backend_container_stopped",
+  "recommendation_action": "restart_container",
+  "execution_enabled_in_mvp": false
+}

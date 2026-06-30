@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Environments and local configuration
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+config.yaml
+
+# Local data
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+
+# Generated evaluation/report data
+data/evals/
+data/reports/
+data/playwright/
+
+# Local assignment source material (canonical product docs live under docs/)
+/incidentpilot-foundation-guide.html
+/incidentpilot_codex_implementation_prompts.md
+/incidentpilot_foundation_pack.zip
+/incidentpilot_foundation_pack/

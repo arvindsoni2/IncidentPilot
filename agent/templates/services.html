@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Services · IncidentPilot{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Inventory</p><h1>Services</h1><p>Explicitly configured, read-only monitoring targets.</p></div></header>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Service</th><th>Status</th><th>Runtime</th><th>Container</th><th>Health URL</th><th>Interval</th><th>Criticality</th><th>Dependencies</th><th></th></tr></thead>
+    <tbody>
+      {% for card in service_cards %}
+      <tr>
+        <td><strong>{{ card.service.name }}</strong></td>
+        <td><span class="status-pill"><span class="status-dot {{ card.status }}"></span>{{ card.status }}</span></td>
+        <td>{{ card.service.runtime }}</td>
+        <td><code>{{ card.service.container_name }}</code></td>
+        <td class="truncate">{{ card.service.health_url or 'Runtime only' }}</td>
+        <td>{{ card.service.polling_interval_seconds }}s</td>
+        <td>{{ card.service.criticality }}</td>
+        <td>{{ card.service.dependencies|join(', ') or 'None' }}</td>
+        <td><form method="post" action="/actions/analyze/{{ card.service.name }}"><button class="button compact primary">Analyze</button></form></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Incidents · IncidentPilot{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">History</p><h1>Incidents</h1><p>Lifecycle, severity, evidence, and diagnosis history.</p></div><span class="muted">Refreshes every 30 seconds</span></header>
+<div id="incident-table" hx-get="/partials/incidents" hx-trigger="every 30s" hx-swap="innerHTML">
+  {% include "partials/incident_table.html" %}
+</div>
+{% endblock %}

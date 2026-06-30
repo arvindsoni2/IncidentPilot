@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Settings · IncidentPilot{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Read-only configuration</p><h1>Settings</h1><p>Runtime transparency without exposing credentials or allowing edits.</p></div><span class="status-pill">Read only</span></header>
+<div class="settings-grid">
+  <section class="panel"><h2>Runtime</h2><dl class="settings-list"><div><dt>Default</dt><dd>{{ settings.runtime.default }}</dd></div><div><dt>Command timeout</dt><dd>{{ settings.runtime.command_timeout_seconds }}s</dd></div></dl></section>
+  <section class="panel"><h2>LLM</h2><dl class="settings-list"><div><dt>Provider</dt><dd>{{ settings.llm.provider }}</dd></div><div><dt>Model</dt><dd>{{ settings.llm.model }}</dd></div><div><dt>Timeout</dt><dd>{{ settings.llm.timeout_seconds }}s</dd></div></dl></section>
+  <section class="panel"><h2>Database</h2><dl class="settings-list"><div><dt>Type</dt><dd>{{ database_driver }}</dd></div><div><dt>Credentials</dt><dd>Hidden</dd></div></dl></section>
+  <section class="panel"><h2>Safety policy</h2><dl class="settings-list"><div><dt>Read only</dt><dd>{{ settings.safety.read_only }}</dd></div><div><dt>Remediation</dt><dd>Disabled</dd></div><div><dt>Arbitrary shell</dt><dd>Blocked</dd></div></dl></section>
+  <section class="panel"><h2>Polling</h2><dl class="settings-list"><div><dt>Default interval</dt><dd>{{ settings.polling.default_interval_seconds }}s</dd></div><div><dt>Auto resolution</dt><dd>3 successful checks</dd></div></dl></section>
+  <section class="panel"><h2>Security state</h2><dl class="settings-list"><div><dt>Default bind</dt><dd>{{ settings.app.host }}</dd></div><div><dt>Authentication</dt><dd>None · localhost MVP</dd></div><div><dt>Secrets shown</dt><dd>No</dd></div></dl></section>
+</div>
+{% endblock %}

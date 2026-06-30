@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>{% block title %}IncidentPilot{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}">
+    <script src="https://unpkg.com/htmx.org@2.0.8" defer></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/">
+        <span class="brand-mark">IP</span>
+        <span>IncidentPilot<small>Read-only MVP</small></span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="/" class="{{ 'active' if page == 'dashboard' else '' }}">Dashboard</a>
+        <a href="/services" class="{{ 'active' if page == 'services' else '' }}">Services</a>
+        <a href="/incidents" class="{{ 'active' if page == 'incidents' else '' }}">Incidents</a>
+        <a href="/reports" class="{{ 'active' if page == 'reports' else '' }}">Reports</a>
+        <a href="/settings" class="{{ 'active' if page == 'settings' else '' }}">Settings</a>
+      </nav>
+      <div class="safety-note">
+        <span class="status-dot healthy"></span>
+        Diagnosis only
+        <small>No remediation execution</small>
+      </div>
+    </aside>
+    <main class="content">
+      {% block content %}{% endblock %}
+      <footer>IncidentPilot v{{ version }} · localhost-first</footer>
+    </main>
+    <script>
+      async function copyReport(id) {
+        const text = document.getElementById(id).innerText;
+        await navigator.clipboard.writeText(text);
+      }
+    </script>
+  </body>
+</html>

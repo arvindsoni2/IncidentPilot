@@ -1,0 +1,64 @@
+app:
+  host: 127.0.0.1
+  port: 8083
+
+database:
+  url: sqlite:///./incidentpilot.db
+
+runtime:
+  default: docker
+  command_timeout_seconds: 10
+
+polling:
+  default_interval_seconds: 30
+
+evidence:
+  logs_since_seconds: 900
+  logs_max_bytes: 50000
+  health_timeout_seconds: 5
+
+metrics:
+  enabled: true
+  base_url: http://127.0.0.1:9090
+  timeout_seconds: 5
+  queries:
+    target_up: 'up{job="demo-backend"}'
+    request_rate: sum(rate(demo_backend_http_requests_total[5m]))
+
+evals:
+  output_directory: data/evals
+
+safety:
+  read_only: true
+  allow_remediation: false
+  allow_arbitrary_shell: false
+
+services:
+  - name: backend
+    runtime: docker
+    container_name: incidentpilot-demo-backend
+    health_url: http://127.0.0.1:8001/health
+    polling_interval_seconds: 30
+    criticality: high
+    dependencies:
+      - postgres
+    enabled: true
+
+  - name: frontend
+    runtime: docker
+    container_name: incidentpilot-demo-frontend
+    health_url: http://127.0.0.1:8082/
+    polling_interval_seconds: 30
+    criticality: medium
+    dependencies:
+      - backend
+    enabled: true
+
+  - name: postgres
+    runtime: docker
+    container_name: incidentpilot-demo-postgres
+    health_url: null
+    polling_interval_seconds: 30
+    criticality: high
+    dependencies: []
+    enabled: true

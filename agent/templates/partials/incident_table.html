@@ -1,0 +1,21 @@
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Incident</th><th>Service</th><th>Severity</th><th>Status</th><th>Trigger</th><th>Summary</th><th>Detected</th><th></th></tr></thead>
+    <tbody>
+    {% for incident in incidents %}
+      <tr>
+        <td><strong>{{ format_incident_ref(incident.id) }}</strong></td>
+        <td>{{ incident.service.name }}</td>
+        <td><span class="severity {{ incident.severity }}">{{ incident.severity }}</span></td>
+        <td><span class="status-pill">{{ incident.status }}</span></td>
+        <td>{{ incident.trigger_type }}</td>
+        <td>{{ incident.summary or 'Analysis pending' }}</td>
+        <td>{{ incident.detected_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td><a class="button compact secondary" href="/incidents/{{ incident.id }}">View</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8"><div class="empty-state">No incidents recorded.</div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
