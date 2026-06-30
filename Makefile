@@ -1,7 +1,7 @@
 COMPOSE ?= docker compose -f infra/compose.yaml
 RUNTIME ?= docker
 
-.PHONY: install lint test eval check verify smoke-clean compose-check compose-build live-integration profile-database ci-local
+.PHONY: install lint test eval check verify smoke-clean compose-check compose-build live-integration visual-smoke profile-database ci-local
 
 install:
 	uv sync --group dev
@@ -30,6 +30,9 @@ compose-build:
 
 live-integration:
 	RUNTIME="$(RUNTIME)" bash scripts/live_integration.sh
+
+visual-smoke:
+	uv run python tests/visual/playwright_smoke.py
 
 profile-database:
 	uv run python scripts/profile_database.py

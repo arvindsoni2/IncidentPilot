@@ -40,11 +40,16 @@ committed `uv.lock`.
 | `make compose-check` | Validate the demo Compose model | `docker compose -f infra/compose.yaml config --quiet` |
 | `make compose-build` | Build local demo images | `docker compose -f infra/compose.yaml build` |
 | `make live-integration` | Exercise live FS-001/FS-002 flows | isolated Compose stack + live pytest suite |
+| `make visual-smoke` | Check desktop/mobile browser UI | Playwright Chromium smoke suite |
 | `make profile-database` | Measure synchronous SQLite persistence | disposable 100-incident profile |
 | `make ci-local` | Standard local CI checks | verify + Compose validation + build |
 
 `make ci-local` and `make live-integration` deliberately fail when Docker or
 Compose is unavailable.
+
+Install the Playwright Chromium binary once per development machine with
+`uv run playwright install chromium`. The visual smoke check expects the demo
+Compose stack and `incidentpilot web` to be running on their documented ports.
 
 CI installs dependencies with `uv sync --locked --group dev`; `--locked`
 rejects drift between `pyproject.toml` and `uv.lock`.

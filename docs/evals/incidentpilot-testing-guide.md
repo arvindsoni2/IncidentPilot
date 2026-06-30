@@ -107,3 +107,17 @@ the marked live suite requires a container runtime.
 The dashboard serves its pinned HTMX build from `/static/htmx-2.0.8.min.js`;
 it makes no browser request to a CDN. Version, upstream URL, license, and
 checksum are recorded in [Third-party static assets](../third-party-assets.md).
+
+## Browser smoke check
+
+With the demo Compose stack and IncidentPilot dashboard running, execute:
+
+```bash
+uv run playwright install chromium
+make visual-smoke
+```
+
+The Playwright suite checks the dashboard, services, incidents, reports,
+settings, demo workload, and Grafana at desktop and mobile viewports. It fails
+on HTTP errors, empty pages, JavaScript errors, or broken action busy states
+and writes screenshots under `data/playwright/`.
