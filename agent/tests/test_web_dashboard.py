@@ -174,8 +174,32 @@ def test_htmx_partials_render(tmp_path: Path) -> None:
 
     assert cards.status_code == 200
     assert "Analyze service" in cards.text
+    assert 'class="action-form"' in cards.text
+    assert 'data-action-scope="analysis"' in cards.text
+    assert "hx-post=" not in cards.text
     assert incidents.status_code == 200
     assert "INC-001" in incidents.text
+
+
+def test_dashboard_actions_have_consistent_busy_states(
+    tmp_path: Path,
+) -> None:
+    settings = web_settings(f"sqlite:///{tmp_path / 'actions.db'}")
+    app = create_app(settings)
+
+    dashboard = asyncio.run(request(app, "GET", "/"))
+    services = asyncio.run(request(app, "GET", "/services"))
+
+    assert dashboard.status_code == 200
+    assert dashboard.text.count('data-action-scope="scenario"') == 3
+    assert "Stopping backend…" in dashboard.text
+    assert "Stopping database…" in dashboard.text
+    assert "Resetting demo…" in dashboard.text
+    assert "/static/app.js" in dashboard.text
+    assert 'id="action-announcer"' in dashboard.text
+    assert services.status_code == 200
+    assert services.text.count('data-action-scope="analysis"') == 2
+    assert "Analyzing backend…" in services.text
 
 
 def test_settings_hides_database_and_provider_secrets() -> None:

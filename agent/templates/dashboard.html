@@ -38,10 +38,16 @@
   <div class="panel">
     <div class="section-heading"><h2>Controlled demo</h2><span class="muted">Allowlisted only</span></div>
     <p>Trigger predefined failures in the isolated demo workload.</p>
-    <div class="button-stack">
-      <form method="post" action="/actions/scenarios/FS-001"><button class="button danger-outline">Trigger FS-001 · Stop backend</button></form>
-      <form method="post" action="/actions/scenarios/FS-002"><button class="button danger-outline">Trigger FS-002 · Stop database</button></form>
-      <form method="post" action="/actions/scenarios/reset"><button class="button secondary">Reset demo baseline</button></form>
+    <div class="button-stack" data-action-group="scenario">
+      <form class="action-form" method="post" action="/actions/scenarios/FS-001" data-action-scope="scenario" data-busy-label="Stopping backend…">
+        <button class="button danger-outline" type="submit">Trigger FS-001 · Stop backend</button>
+      </form>
+      <form class="action-form" method="post" action="/actions/scenarios/FS-002" data-action-scope="scenario" data-busy-label="Stopping database…">
+        <button class="button danger-outline" type="submit">Trigger FS-002 · Stop database</button>
+      </form>
+      <form class="action-form" method="post" action="/actions/scenarios/reset" data-action-scope="scenario" data-busy-label="Resetting demo…">
+        <button class="button secondary" type="submit">Reset demo baseline</button>
+      </form>
     </div>
   </div>
 </section>

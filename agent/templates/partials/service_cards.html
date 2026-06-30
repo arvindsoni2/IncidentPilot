@@ -11,8 +11,8 @@
       <div><dt>Criticality</dt><dd>{{ card.service.criticality }}</dd></div>
       <div><dt>Last check</dt><dd>{{ card.last_check.strftime('%H:%M:%S') if card.last_check else 'Not checked' }}</dd></div>
     </dl>
-    <form method="post" action="/actions/analyze/{{ card.service.name }}" hx-post="/actions/analyze/{{ card.service.name }}">
-      <button class="button primary">Analyze service</button>
+    <form class="action-form" method="post" action="/actions/analyze/{{ card.service.name }}" data-action-scope="analysis" data-busy-label="Analyzing {{ card.service.name }}…">
+      <button class="button primary" type="submit">Analyze service</button>
     </form>
   </article>
   {% else %}

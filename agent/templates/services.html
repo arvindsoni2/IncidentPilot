@@ -16,7 +16,11 @@
         <td>{{ card.service.polling_interval_seconds }}s</td>
         <td>{{ card.service.criticality }}</td>
         <td>{{ card.service.dependencies|join(', ') or 'None' }}</td>
-        <td><form method="post" action="/actions/analyze/{{ card.service.name }}"><button class="button compact primary">Analyze</button></form></td>
+        <td>
+          <form class="action-form" method="post" action="/actions/analyze/{{ card.service.name }}" data-action-scope="analysis" data-busy-label="Analyzing {{ card.service.name }}…">
+            <button class="button compact primary" type="submit">Analyze</button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>

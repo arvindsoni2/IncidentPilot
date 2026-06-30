@@ -68,6 +68,49 @@ def main() -> None:
                         f"body length {len(body_text)}"
                     )
 
+                if name == "dashboard":
+                    busy_state = page.evaluate(
+                        """() => {
+                          const form = document.querySelector(
+                            'form[action="/actions/scenarios/FS-001"]'
+                          );
+                          form.addEventListener(
+                            "submit",
+                            (event) => event.preventDefault(),
+                            { once: true },
+                          );
+                          form.requestSubmit();
+                          const buttons = Array.from(
+                            document.querySelectorAll(
+                              '[data-action-scope="scenario"] button'
+                            )
+                          );
+                          return {
+                            allDisabled: buttons.every(
+                              (button) => button.disabled
+                            ),
+                            busy: form.getAttribute("aria-busy"),
+                            label: form.querySelector("button").textContent,
+                          };
+                        }"""
+                    )
+                    if busy_state != {
+                        "allDisabled": True,
+                        "busy": "true",
+                        "label": "Stopping backend…",
+                    }:
+                        failures.append(
+                            f"{viewport_name}/dashboard action lock: "
+                            f"{busy_state}"
+                        )
+                    page.screenshot(
+                        path=str(
+                            OUTPUT_DIRECTORY
+                            / f"{viewport_name}-dashboard-busy.png"
+                        ),
+                        full_page=True,
+                    )
+
             if console_errors:
                 failures.extend(
                     f"{viewport_name} browser error: {item}"

@@ -7,6 +7,7 @@
     <title>{% block title %}IncidentPilot{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}">
     <script src="https://unpkg.com/htmx.org@2.0.8" defer></script>
+    <script src="{{ url_for('static', path='/app.js') }}" defer></script>
   </head>
   <body>
     <aside class="sidebar">
@@ -31,6 +32,7 @@
       {% block content %}{% endblock %}
       <footer>IncidentPilot v{{ version }} · localhost-first</footer>
     </main>
+    <div id="action-announcer" class="sr-only" role="status" aria-live="polite"></div>
     <script>
       async function copyReport(id) {
         const text = document.getElementById(id).innerText;
