@@ -22,6 +22,7 @@ deployments, delete volumes, or execute arbitrary shell commands.
 - Typer CLI
 - SQLite storage through PostgreSQL-compatible SQLAlchemy models
 - Golden-file evaluations and UI/integration tests
+- Versioned database migrations and queryable evaluation history
 - Controlled demo-only failure scenarios
 
 ## Quickstart
@@ -134,6 +135,8 @@ incidentpilot incidents close INC-001
 incidentpilot reports export-json INC-001
 incidentpilot reports download-markdown INC-001
 incidentpilot evals run
+incidentpilot evals list
+incidentpilot evals export --output eval-history.json
 make check
 make verify
 make ci-local
@@ -172,6 +175,8 @@ read-only, and credentials are never rendered.
 
 - [Setup guide](docs/setup.md)
 - [Developer guide](docs/developer-guide.md)
+- [Data retention and export](docs/data-retention.md)
+- [v0.2 persistence/lifecycle plan](docs/v0.2-persistence-lifecycle-plan.md)
 - [v0.2 release-engineering plan](docs/v0.2-release-engineering-plan.md)
 - [Architecture overview](docs/architecture/incidentpilot-architecture-overview.md)
 - [Runbook](docs/runbooks/incidentpilot-mvp-runbook.md)

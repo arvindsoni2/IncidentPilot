@@ -23,11 +23,10 @@ def create_session_factory(engine: Engine) -> sessionmaker[Session]:
 
 
 def initialise_database(settings: Settings) -> Engine:
-    """Create configured tables and return the initialized engine."""
-
-    # Import model registrations before asking SQLAlchemy to create metadata.
-    import agent.app.models  # noqa: F401
+    """Upgrade the configured database and return the initialized engine."""
 
     engine = create_database_engine(settings.database.url)
-    Base.metadata.create_all(engine)
+    from agent.app.migrations import upgrade_database
+
+    upgrade_database(engine)
     return engine

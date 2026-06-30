@@ -3,6 +3,8 @@
 from agent.app.models.entities import (
     AgentRun,
     DeploymentEvent,
+    EvalCheckResult,
+    EvalRun,
     HealthCheckResult,
     Hypothesis,
     Incident,
@@ -15,6 +17,8 @@ from agent.app.models.entities import (
 __all__ = [
     "AgentRun",
     "DeploymentEvent",
+    "EvalCheckResult",
+    "EvalRun",
     "HealthCheckResult",
     "Hypothesis",
     "Incident",

@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session, selectinload
 from agent.app.config import Settings
 from agent.app.models import (
     AgentRun,
+    EvalCheckResult,
+    EvalRun,
     Hypothesis,
     Incident,
     IncidentEvidence,
@@ -254,6 +256,58 @@ def finish_agent_run(
     session.commit()
     session.refresh(run)
     return run
+
+
+def save_eval_run(
+    session: Session,
+    *,
+    scenario_id: str,
+    passed: bool,
+    model: str,
+    prompt_versions: dict[str, str],
+    checks: Iterable[dict[str, Any]],
+    output_path: str | None,
+) -> EvalRun:
+    run = EvalRun(
+        scenario_id=scenario_id,
+        passed=passed,
+        model=model,
+        prompt_versions=prompt_versions,
+        output_path=output_path,
+    )
+    run.checks = [EvalCheckResult(**check) for check in checks]
+    session.add(run)
+    session.commit()
+    session.refresh(run)
+    return run
+
+
+def list_eval_runs(
+    session: Session, *, limit: int = 100
+) -> list[EvalRun]:
+    query = (
+        select(EvalRun)
+        .options(selectinload(EvalRun.checks))
+        .order_by(EvalRun.started_at.desc())
+        .limit(limit)
+    )
+    return list(session.scalars(query))
+
+
+def delete_eval_runs_before(
+    session: Session, *, cutoff: datetime
+) -> int:
+    runs = list(
+        session.scalars(
+            select(EvalRun)
+            .options(selectinload(EvalRun.checks))
+            .where(EvalRun.completed_at < cutoff)
+        )
+    )
+    for run in runs:
+        session.delete(run)
+    session.commit()
+    return len(runs)
 
 
 def list_incidents(

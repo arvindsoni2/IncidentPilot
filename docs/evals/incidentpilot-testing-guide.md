@@ -37,6 +37,14 @@ incidentpilot evals run --scenario FS-001
 incidentpilot evals run --scenario FS-002
 ```
 
+Each invocation also persists the run and its individual check results in the
+configured database. Inspect or export that history with:
+
+```bash
+incidentpilot evals list
+incidentpilot evals export --output eval-history.json
+```
+
 Committed assets:
 
 - `tests/golden-files/incident-analysis.schema.json`

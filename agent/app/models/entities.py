@@ -95,7 +95,7 @@ class Incident(Base):
     __tablename__ = "incidents"
     __table_args__ = (
         CheckConstraint(
-            "status IN ('new', 'analyzing', 'diagnosed', 'resolved', 'closed')",
+            "status IN ('new', 'analyzing', 'diagnosed', 'failed', 'resolved', 'closed')",
             name="ck_incident_status",
         ),
         CheckConstraint(
@@ -258,3 +258,39 @@ class AgentRun(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     incident: Mapped[Incident] = relationship(back_populates="agent_runs")
+
+
+class EvalRun(Base):
+    __tablename__ = "eval_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scenario_id: Mapped[str] = mapped_column(String(64), index=True)
+    passed: Mapped[bool] = mapped_column(Boolean)
+    model: Mapped[str] = mapped_column(String(255))
+    prompt_versions: Mapped[dict[str, str]] = mapped_column(JSON, default=dict)
+    output_path: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, index=True
+    )
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )
+
+    checks: Mapped[list[EvalCheckResult]] = relationship(
+        back_populates="run", cascade="all, delete-orphan"
+    )
+
+
+class EvalCheckResult(Base):
+    __tablename__ = "eval_check_results"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    eval_run_id: Mapped[int] = mapped_column(
+        ForeignKey("eval_runs.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(255))
+    passed: Mapped[bool] = mapped_column(Boolean)
+    expected: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    actual: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+
+    run: Mapped[EvalRun] = relationship(back_populates="checks")

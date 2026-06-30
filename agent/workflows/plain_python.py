@@ -130,6 +130,7 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
                 llm_status=analysis.llm_status,
             )
         except Exception as error:
+            incident.status = "failed"
             incident.summary = f"Analysis failed: {error}"
             self.session.commit()
             finish_agent_run(

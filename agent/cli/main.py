@@ -2,6 +2,7 @@
 
 import json
 from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterator
 
@@ -19,7 +20,9 @@ from agent.app.services import (
     ScenarioRunner,
     ScenarioRunnerError,
     close_incident,
+    delete_eval_runs_before,
     get_incident_detail,
+    list_eval_runs,
     list_incidents,
     mark_incident_resolved,
 )
@@ -85,11 +88,14 @@ def web(
 
 @db_app.command("init")
 def db_init() -> None:
-    """Create the configured database tables."""
+    """Create or upgrade the configured database schema."""
 
     settings = load_settings()
     engine = initialise_database(settings)
-    typer.echo(f"Database initialized: {engine.url.render_as_string(hide_password=True)}")
+    typer.echo(
+        "Database initialized/upgraded: "
+        f"{engine.url.render_as_string(hide_password=True)}"
+    )
     engine.dispose()
 
 
@@ -442,10 +448,13 @@ def evals_run(
 ) -> None:
     """Run deterministic golden-file incident evaluations."""
 
-    try:
-        results = EvalRunner(settings=load_settings()).run(scenario)
-    except ValueError as error:
-        raise typer.BadParameter(str(error)) from error
+    for session, settings in _database_session():
+        try:
+            results = EvalRunner(
+                settings=settings, session=session
+            ).run(scenario)
+        except ValueError as error:
+            raise typer.BadParameter(str(error)) from error
     payload: object = (
         results[0].model_dump(mode="json")
         if scenario
@@ -454,6 +463,87 @@ def evals_run(
     typer.echo(json.dumps(payload, indent=2))
     if not all(result.passed for result in results):
         raise typer.Exit(code=1)
+
+
+def _eval_run_payload(run) -> dict:
+    return {
+        "id": run.id,
+        "scenario_id": run.scenario_id,
+        "passed": run.passed,
+        "model": run.model,
+        "prompt_versions": run.prompt_versions,
+        "output_path": run.output_path,
+        "started_at": run.started_at.isoformat(),
+        "completed_at": run.completed_at.isoformat(),
+        "checks": [
+            {
+                "name": check.name,
+                "passed": check.passed,
+                "expected": check.expected,
+                "actual": check.actual,
+            }
+            for check in run.checks
+        ],
+    }
+
+
+@evals_app.command("list")
+def evals_list(
+    limit: int = typer.Option(20, "--limit", min=1, max=1000),
+) -> None:
+    """List persisted deterministic evaluation runs."""
+
+    for session, _settings in _database_session():
+        runs = list_eval_runs(session, limit=limit)
+        if not runs:
+            typer.echo("No evaluation runs recorded.")
+            return
+        for run in runs:
+            typer.echo(
+                f"{run.id}\t{run.scenario_id}\t"
+                f"{'passed' if run.passed else 'failed'}\t"
+                f"{run.completed_at.isoformat()}"
+            )
+
+
+@evals_app.command("export")
+def evals_export(
+    output: Path = typer.Option(..., "--output", "-o"),
+    limit: int = typer.Option(1000, "--limit", min=1, max=10000),
+) -> None:
+    """Export persisted evaluation history as JSON."""
+
+    for session, _settings in _database_session():
+        payload = [
+            _eval_run_payload(run)
+            for run in list_eval_runs(session, limit=limit)
+        ]
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps(payload, indent=2) + "\n", encoding="utf-8"
+        )
+        typer.echo(str(output))
+
+
+@evals_app.command("prune")
+def evals_prune(
+    older_than_days: int = typer.Option(
+        ..., "--older-than-days", min=1
+    ),
+    yes: bool = typer.Option(
+        False, "--yes", help="Confirm permanent deletion."
+    ),
+) -> None:
+    """Delete persisted eval runs older than a deliberate cutoff."""
+
+    if not yes:
+        raise typer.BadParameter("Pass --yes to confirm deletion")
+    cutoff = datetime.now(timezone.utc) - timedelta(
+        days=older_than_days
+    )
+    for session, _settings in _database_session():
+        deleted = delete_eval_runs_before(session, cutoff=cutoff)
+        typer.echo(f"Deleted {deleted} evaluation runs.")
 
 
 if __name__ == "__main__":

@@ -43,6 +43,8 @@ flowchart TD
    evidence and deterministic action keys/policy flags.
 7. Invalid, unavailable, or timed-out LLM output falls back to rules-only.
 8. JSON and Markdown reports are persisted; the incident becomes `diagnosed`.
+   If analysis itself fails, the agent run and incident become `failed` with
+   the error recorded instead of remaining indefinitely `analyzing`.
 9. A human resolves the cause. Three successful health checks or a manual
    command marks the incident `resolved`; a resolved incident may be `closed`.
 

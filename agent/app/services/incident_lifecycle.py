@@ -20,7 +20,7 @@ def mark_incident_resolved(
         raise ValueError(f"Unknown incident ID: {incident_id}")
     if consecutive_successes is not None and consecutive_successes < 3:
         return incident
-    if incident.status not in {"new", "analyzing", "diagnosed"}:
+    if incident.status not in {"new", "analyzing", "diagnosed", "failed"}:
         raise ValueError(
             f"Cannot resolve incident in status {incident.status}"
         )
