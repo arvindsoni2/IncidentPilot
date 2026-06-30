@@ -39,9 +39,11 @@ committed `uv.lock`.
 | `make smoke-clean` | Fresh-checkout install/startup smoke | isolated archive + locked sync + health probe |
 | `make compose-check` | Validate the demo Compose model | `docker compose -f infra/compose.yaml config --quiet` |
 | `make compose-build` | Build local demo images | `docker compose -f infra/compose.yaml build` |
-| `make ci-local` | Full local CI parity | verify + Compose validation + build |
+| `make live-integration` | Exercise live FS-001/FS-002 flows | isolated Compose stack + live pytest suite |
+| `make ci-local` | Standard local CI checks | verify + Compose validation + build |
 
-`make ci-local` deliberately fails when Docker or Compose is unavailable.
+`make ci-local` and `make live-integration` deliberately fail when Docker or
+Compose is unavailable.
 
 CI installs dependencies with `uv sync --locked --group dev`; `--locked`
 rejects drift between `pyproject.toml` and `uv.lock`.
@@ -54,10 +56,12 @@ best-effort locally:
 ```bash
 make compose-check COMPOSE="podman compose -f infra/compose.yaml"
 make compose-build COMPOSE="podman compose -f infra/compose.yaml"
+make live-integration RUNTIME=podman
 ```
 
-The Compose targets validate and build images only. They do not start services
-or inject the live FS-001/FS-002 scenarios.
+The Compose validation and build targets do not start services. The separate
+live integration target starts an isolated stack, injects FS-001 and FS-002,
+checks the persisted reports, resets the services, and tears the stack down.
 
 ## Local configuration
 

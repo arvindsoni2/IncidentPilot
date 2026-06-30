@@ -129,3 +129,34 @@ def test_cli_lists_scenarios_and_reset_is_available() -> None:
     assert "FS-002" in listed.stdout
     assert help_result.exit_code == 0
     assert "reset" in help_result.stdout
+
+
+def test_runtime_loss_is_reported_as_a_typed_error() -> None:
+    runner = ScenarioRunner(settings=settings())
+
+    with patch(
+        "subprocess.run", side_effect=FileNotFoundError("docker missing")
+    ):
+        with pytest.raises(ScenarioRunnerError) as captured:
+            runner.trigger("FS-001")
+
+    assert captured.value.code == "runtime_unavailable"
+    assert "docker missing" in captured.value.message
+
+
+def test_reset_failure_does_not_prevent_a_safe_retry() -> None:
+    failed = subprocess.CompletedProcess(
+        args=[], returncode=1, stdout="", stderr="temporary failure"
+    )
+    runner = ScenarioRunner(settings=settings())
+
+    with patch(
+        "subprocess.run", side_effect=[failed, completed()]
+    ) as run:
+        with pytest.raises(ScenarioRunnerError) as captured:
+            runner.reset()
+        retry = runner.reset()
+
+    assert captured.value.code == "command_failed"
+    assert retry.scenario_id == "reset"
+    assert run.call_count == 2

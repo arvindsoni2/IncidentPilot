@@ -82,13 +82,22 @@ backend fault must not outrank the failed database without supporting evidence.
 
 ## Live integration checks
 
-Start the demo stack before live checks:
+Run the isolated Docker-backed scenario suite from the repository root:
 
 ```bash
-docker compose -f infra/compose.yaml up -d --build
-curl http://127.0.0.1:8001/health
-curl http://127.0.0.1:9090/-/healthy
+make live-integration
 ```
 
-The automated workflow tests mock runtime and LLM boundaries so CI does not
-require Docker, Podman, Ollama, Prometheus, or network access.
+The harness builds and starts the demo Compose stack, triggers FS-001 and
+FS-002, analyzes each failure, checks the persisted incident and exported
+report, restores the healthy baseline, and tears down its containers and
+volume. CI runs the same target in a dedicated live integration job.
+
+For best-effort Podman Compose coverage, use:
+
+```bash
+make live-integration RUNTIME=podman
+```
+
+The normal pytest suite continues to mock runtime and LLM boundaries, so only
+the marked live suite requires a container runtime.
