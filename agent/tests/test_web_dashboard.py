@@ -12,8 +12,10 @@ from agent.app.services import (
     add_evidence,
     add_hypotheses,
     add_recommendations,
+    create_agent_run,
     create_incident,
     create_service,
+    finish_agent_run,
     save_report,
 )
 from agent.workflows import IncidentAnalysisResult
@@ -158,6 +160,10 @@ def test_all_dashboard_pages_render_with_sample_incident(
     assert "backend_container_stopped" in detail.text
     assert "Execution disabled in MVP" in detail.text
     assert "No remediation executed" in detail.text
+    assert "/static/htmx-2.0.8.min.js" in detail.text
+    assert "unpkg.com" not in detail.text
+    assert "Collected" in detail.text
+    assert "available" in detail.text
 
 
 def test_htmx_partials_render(tmp_path: Path) -> None:
@@ -179,6 +185,62 @@ def test_htmx_partials_render(tmp_path: Path) -> None:
     assert "hx-post=" not in cards.text
     assert incidents.status_code == 200
     assert "INC-001" in incidents.text
+
+
+def test_vendored_htmx_asset_is_served() -> None:
+    app = create_app(Settings())
+
+    response = asyncio.run(
+        request(app, "GET", "/static/htmx-2.0.8.min.js")
+    )
+
+    assert response.status_code == 200
+    assert "htmx" in response.text[:500].lower()
+
+
+def test_failed_run_is_explained_on_incident_detail(
+    tmp_path: Path,
+) -> None:
+    settings = web_settings(f"sqlite:///{tmp_path / 'failed.db'}")
+    engine = initialise_database(settings)
+    factory = create_session_factory(engine)
+    with factory() as session:
+        service = create_service(
+            session,
+            name="backend",
+            container_name="incidentpilot-demo-backend",
+        )
+        incident = create_incident(
+            session,
+            service_id=service.id,
+            trigger_type="manual",
+            status="failed",
+            summary="Analysis failed: runtime disappeared",
+        )
+        run = create_agent_run(
+            session,
+            incident_id=incident.id,
+            workflow_version="plain-python-v1",
+            prompt_versions={},
+            model=None,
+        )
+        finish_agent_run(
+            session,
+            run,
+            status="failed",
+            error="runtime disappeared",
+        )
+        incident_id = incident.id
+    engine.dispose()
+
+    response = asyncio.run(
+        request(create_app(settings), "GET", f"/incidents/{incident_id}")
+    )
+
+    assert response.status_code == 200
+    assert "Analysis failed" in response.text
+    assert "runtime disappeared" in response.text
+    assert "failed run were retained" in response.text
 
 
 def test_dashboard_actions_have_consistent_busy_states(

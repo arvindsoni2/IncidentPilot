@@ -78,6 +78,12 @@ Default host ports:
 | 3001 | Grafana |
 | 11434 | Ollama |
 
+These mappings are intentionally separate from the local JobPilot v2 defaults:
+frontend `3000`, backend `8000`, primary LLM `8080`, and triage LLM `8081`.
+Both applications can run together without remapping. Port `8082` is the
+minimal IncidentPilot demo workload; the full IncidentPilot dashboard still
+requires the separate `incidentpilot web` process on `8083`.
+
 Find a listener with `ss -ltnp`. Change the host side of the relevant Compose
 `ports` mapping and update `config.yaml` health URLs. Change IncidentPilot with:
 

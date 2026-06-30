@@ -40,10 +40,16 @@ committed `uv.lock`.
 | `make compose-check` | Validate the demo Compose model | `docker compose -f infra/compose.yaml config --quiet` |
 | `make compose-build` | Build local demo images | `docker compose -f infra/compose.yaml build` |
 | `make live-integration` | Exercise live FS-001/FS-002 flows | isolated Compose stack + live pytest suite |
+| `make visual-smoke` | Check desktop/mobile browser UI | Playwright Chromium smoke suite |
+| `make profile-database` | Measure synchronous SQLite persistence | disposable 100-incident profile |
 | `make ci-local` | Standard local CI checks | verify + Compose validation + build |
 
 `make ci-local` and `make live-integration` deliberately fail when Docker or
 Compose is unavailable.
+
+Install the Playwright Chromium binary once per development machine with
+`uv run playwright install chromium`. The visual smoke check expects the demo
+Compose stack and `incidentpilot web` to be running on their documented ports.
 
 CI installs dependencies with `uv sync --locked --group dev`; `--locked`
 rejects drift between `pyproject.toml` and `uv.lock`.
@@ -88,6 +94,18 @@ uv run incidentpilot evals prune --older-than-days 90 --yes
 ```
 
 See [Data retention and export](data-retention.md) for the deletion contract.
+
+## Synchronous persistence profile
+
+Run `make profile-database` to measure incident/evidence writes, incident-list
+loading, and eager-loaded detail reads against a disposable local SQLite
+database. The command reports mean, median, p95, and maximum timings as JSON
+and leaves no application data behind.
+
+This is a local single-user workload, so synchronous SQLAlchemy remains the
+simpler architecture. Re-run the profile with representative hardware and
+data volume before expanding concurrency or considering asynchronous
+persistence; do not infer production capacity from the development benchmark.
 
 If dependency metadata changes, run `uv lock` and commit the updated lockfile.
 If CI reports lockfile drift, reproduce it with `uv lock --check`.

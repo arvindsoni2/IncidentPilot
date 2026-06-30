@@ -45,6 +45,7 @@ class CollectedEvidence:
     type: str
     source: str
     summary: str
+    collected_at: datetime | None = None
 
     @property
     def ref(self) -> str:
@@ -239,6 +240,7 @@ class EvidenceCollector:
                     type=record.type,
                     source=record.source,
                     summary=record.summary,
+                    collected_at=record.collected_at,
                 )
                 for record in evidence_records
             ],
