@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from agent import __version__
 from agent.app.database import create_session_factory, initialise_database
-from agent.app.models import HealthCheckResult, Incident, Service
+from agent.app.models import HealthCheckResult, Service
 from agent.app.services import (
     ScenarioRunner,
     ScenarioRunnerError,

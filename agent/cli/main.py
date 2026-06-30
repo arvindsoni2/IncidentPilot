@@ -12,13 +12,12 @@ from sqlalchemy.orm import Session
 from agent import __version__
 from agent.adapters.runtime import create_runtime_adapter
 from agent.app.config import load_settings
-from agent.app.database import initialise_database
-from agent.app.database import create_session_factory
+from agent.app.database import create_session_factory, initialise_database
 from agent.app.services import (
+    EvalRunner,
+    HealthPoller,
     ScenarioRunner,
     ScenarioRunnerError,
-    HealthPoller,
-    EvalRunner,
     close_incident,
     get_incident_detail,
     list_incidents,

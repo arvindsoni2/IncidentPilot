@@ -1,5 +1,7 @@
 # IncidentPilot
 
+[![CI](https://github.com/arvindsoni2/IncidentPilot/actions/workflows/ci.yml/badge.svg)](https://github.com/arvindsoni2/IncidentPilot/actions/workflows/ci.yml)
+
 IncidentPilot is a local-first incident triage agent for Docker and Podman
 services. It collects operational evidence, applies deterministic rules,
 optionally asks an Ollama-compatible model to rank evidence-grounded
@@ -26,21 +28,20 @@ deployments, delete volumes, or execute arbitrary shell commands.
 
 Requirements:
 
-- Python 3.11 or newer
+- Python 3.11 or 3.12
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- GNU Make
 - Docker Compose or Podman Compose
 - Ollama is optional; rules-only diagnosis works without it
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[dev]"
+make install
 cp .env.example .env
 cp config.example.yaml config.yaml
-command -v incidentpilot
-incidentpilot version
-incidentpilot db init
+uv run incidentpilot version
+uv run incidentpilot db init
 docker compose -f infra/compose.yaml up -d --build
-incidentpilot web
+uv run incidentpilot web
 ```
 
 Open the IncidentPilot dashboard at <http://127.0.0.1:8083>.
@@ -59,23 +60,19 @@ IncidentPilot to observe. It is not the IncidentPilot dashboard. The dashboard
 and navigation pages are served by the separate `incidentpilot web` process on
 port `8083`.
 
-All commands below assume the virtual environment is active and the editable
-install completed successfully. If `incidentpilot` is not found, use the module
-entry point from the repository root:
+`uv run` executes commands in the locked project environment. The generated
+console script is also available after activating `.venv`.
 
 ```bash
-python -m agent.cli.main --help
-python -m agent.cli.main web
+uv run incidentpilot --help
+uv run incidentpilot web
 ```
 
 To restore the short `incidentpilot` command in Bash:
 
 ```bash
 source .venv/bin/activate
-python -m pip install -e ".[dev]"
-hash -r
 incidentpilot version
-incidentpilot web
 ```
 
 The equivalent dashboard launch command, which does not depend on the generated
@@ -83,7 +80,7 @@ console script, is:
 
 ```bash
 INCIDENTPILOT_CONFIG_FILE=config.example.yaml \
-  python -m agent.cli.main web --host 127.0.0.1 --port 8083
+  uv run incidentpilot web --host 127.0.0.1 --port 8083
 ```
 
 Do not use port `8080` for IncidentPilot on this workstation; it is already
@@ -107,6 +104,23 @@ Scenario commands are the sole exception to read-only operation: they use
 fixed Compose arguments and an exact allowlist of `incidentpilot-demo-*`
 containers. They are isolated from the analysis workflow.
 
+Live failure scenarios are intentionally manual in v0.2 Milestone 1. CI runs
+deterministic evaluations and builds the Compose images, but does not inject
+FS-001 or FS-002.
+
+## Reviewer verification
+
+From a fresh checkout:
+
+```bash
+make install
+make verify
+make compose-build
+```
+
+Use `make check` for the fast lint-and-test loop or `make ci-local` for full
+local CI parity, including Compose validation and image builds.
+
 ## Common commands
 
 ```bash
@@ -120,7 +134,9 @@ incidentpilot incidents close INC-001
 incidentpilot reports export-json INC-001
 incidentpilot reports download-markdown INC-001
 incidentpilot evals run
-pytest
+make check
+make verify
+make ci-local
 ```
 
 Run `incidentpilot --help` for the complete command tree.
@@ -155,6 +171,8 @@ read-only, and credentials are never rendered.
 ## Documentation
 
 - [Setup guide](docs/setup.md)
+- [Developer guide](docs/developer-guide.md)
+- [v0.2 release-engineering plan](docs/v0.2-release-engineering-plan.md)
 - [Architecture overview](docs/architecture/incidentpilot-architecture-overview.md)
 - [Runbook](docs/runbooks/incidentpilot-mvp-runbook.md)
 - [Testing and evaluations](docs/evals/incidentpilot-testing-guide.md)

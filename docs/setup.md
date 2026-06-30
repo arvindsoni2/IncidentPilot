@@ -4,6 +4,8 @@
 
 - Python 3.11 or newer
 - Git
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- GNU Make
 - Docker with Compose v2, or Podman with `podman compose`
 - Optional: Ollama for LLM-enhanced diagnosis
 
@@ -14,27 +16,25 @@ All application and demo ports bind to `127.0.0.1`.
 From the repository root:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+make install
 cp .env.example .env
 cp config.example.yaml config.yaml
-incidentpilot db init
+uv run incidentpilot db init
 ```
 
-On Windows PowerShell, activate the environment with:
+On Windows, use WSL2 for the documented Linux workflow. To activate the
+generated environment manually:
 
-```powershell
-.venv\Scripts\Activate.ps1
+```bash
+source .venv/bin/activate
 ```
 
 Verify the installation:
 
 ```bash
-incidentpilot version
-incidentpilot services list
-pytest
+uv run incidentpilot version
+uv run incidentpilot services list
+make verify
 ```
 
 ## Configuration
