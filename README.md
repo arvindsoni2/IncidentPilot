@@ -105,9 +105,15 @@ Scenario commands are the sole exception to read-only operation: they use
 fixed Compose arguments and an exact allowlist of `incidentpilot-demo-*`
 containers. They are isolated from the analysis workflow.
 
-Live failure scenarios are intentionally manual in v0.2 Milestone 1. CI runs
-deterministic evaluations and builds the Compose images, but does not inject
-FS-001 or FS-002.
+CI also runs an isolated live integration job that builds the demo stack,
+injects FS-001 and FS-002, verifies the persisted diagnosis and report, and
+resets the affected services. Run the same check locally with:
+
+```bash
+make live-integration
+```
+
+The harness removes its Compose stack and test database when it exits.
 
 ## Reviewer verification
 
@@ -117,10 +123,11 @@ From a fresh checkout:
 make install
 make verify
 make compose-build
+make live-integration
 ```
 
-Use `make check` for the fast lint-and-test loop or `make ci-local` for full
-local CI parity, including Compose validation and image builds.
+Use `make check` for the fast lint-and-test loop or `make ci-local` for the
+Docker-free checks plus Compose validation and image builds.
 
 ## Common commands
 

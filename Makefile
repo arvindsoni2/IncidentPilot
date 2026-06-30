@@ -1,6 +1,7 @@
 COMPOSE ?= docker compose -f infra/compose.yaml
+RUNTIME ?= docker
 
-.PHONY: install lint test eval check verify smoke-clean compose-check compose-build ci-local
+.PHONY: install lint test eval check verify smoke-clean compose-check compose-build live-integration ci-local
 
 install:
 	uv sync --group dev
@@ -26,5 +27,8 @@ compose-check:
 
 compose-build:
 	$(COMPOSE) build
+
+live-integration:
+	RUNTIME="$(RUNTIME)" bash scripts/live_integration.sh
 
 ci-local: verify smoke-clean compose-check compose-build
