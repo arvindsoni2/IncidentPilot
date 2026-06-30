@@ -89,7 +89,35 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
             )
             baseline = self.rules_engine.diagnose(context)
             analysis = self.llm_service.enhance(baseline)
-            markdown = self.report_generator.generate(analysis)
+            diagnosed_at = datetime.now(timezone.utc)
+            timeline = [
+                ("Detected", incident.detected_at),
+                ("Analysis started", run.started_at),
+                ("Diagnosis completed", diagnosed_at),
+            ]
+            evidence_timestamps = {
+                item.ref: item.collected_at
+                for item in context.evidence_items
+                if item.collected_at is not None
+            }
+            markdown = self.report_generator.generate(
+                analysis,
+                timeline=timeline,
+                evidence_timestamps=evidence_timestamps,
+            )
+            report_payload = analysis.model_dump(mode="json")
+            report_payload["timeline"] = [
+                {
+                    "event": label,
+                    "timestamp": timestamp.isoformat(),
+                }
+                for label, timestamp in timeline
+            ]
+            for item in report_payload["evidence"]:
+                collected_at = evidence_timestamps.get(item["ref"])
+                item["collected_at"] = (
+                    collected_at.isoformat() if collected_at else None
+                )
 
             add_hypotheses(
                 self.session,
@@ -111,14 +139,14 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
                 self.session,
                 incident_id=incident.id,
                 markdown=markdown,
-                json_payload=analysis.model_dump(mode="json"),
+                json_payload=report_payload,
             )
 
             incident.status = "diagnosed"
             incident.severity = analysis.severity
             incident.summary = analysis.summary
             incident.llm_status = analysis.llm_status
-            incident.diagnosed_at = datetime.now(timezone.utc)
+            incident.diagnosed_at = diagnosed_at
             self.session.commit()
             finish_agent_run(self.session, run, status="completed")
 

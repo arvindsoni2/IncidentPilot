@@ -6,12 +6,29 @@
   <div class="header-meta"><span class="severity {{ incident.severity }}">{{ incident.severity }}</span><span class="status-pill">{{ incident.status }}</span></div>
 </header>
 
+{% if incident.status == 'failed' %}
+<section class="alert alert-error" role="alert">
+  <strong>Analysis failed</strong>
+  <p>{{ incident.summary }}</p>
+  <span>The incident and failed run were retained for troubleshooting.</span>
+</section>
+{% elif incident.llm_status == 'unavailable' %}
+<section class="alert alert-warning">
+  <strong>Rules-only diagnosis</strong>
+  <p>The LLM provider was unavailable. The report remains grounded in deterministic evidence.</p>
+</section>
+{% endif %}
+
 <section class="panel">
   <h2>Timeline</h2>
   <ol class="timeline">
     <li><strong>Detected</strong><span>{{ incident.detected_at }}</span></li>
     <li><strong>Analysis started</strong><span>{{ incident.started_at }}</span></li>
+    {% if incident.status == 'failed' %}
+    <li class="timeline-failed"><strong>Analysis failed</strong><span>{{ incident.agent_runs[-1].ended_at if incident.agent_runs else 'Failure recorded' }}</span></li>
+    {% else %}
     <li><strong>Diagnosed</strong><span>{{ incident.diagnosed_at or 'In progress' }}</span></li>
+    {% endif %}
     {% if incident.resolved_at %}<li><strong>Resolved</strong><span>{{ incident.resolved_at }}</span></li>{% endif %}
     {% if incident.closed_at %}<li><strong>Closed</strong><span>{{ incident.closed_at }}</span></li>{% endif %}
   </ol>
@@ -21,7 +38,14 @@
   <div class="section-heading"><h2>Evidence</h2><span class="muted">{{ incident.evidence|length }} items</span></div>
   <div class="evidence-list">
   {% for item in incident.evidence %}
-    <article><span class="evidence-type">{{ item.type }}</span><strong>{{ item.source }}</strong><p>{{ item.summary }}</p><code>evidence:{{ item.id }}</code></article>
+    {% set unavailable = 'unavailable' in item.summary|lower or 'disabled' in item.summary|lower or 'error' in item.summary|lower %}
+    <article class="{{ 'evidence-degraded' if unavailable else '' }}">
+      <span class="evidence-type">{{ item.type }}</span>
+      <div class="evidence-heading"><strong>{{ item.source }}</strong><span class="source-state {{ 'degraded' if unavailable else 'available' }}">{{ 'degraded' if unavailable else 'available' }}</span></div>
+      <p>{{ item.summary }}</p>
+      <small>Collected {{ item.collected_at }}</small>
+      <code>evidence:{{ item.id }}</code>
+    </article>
   {% else %}<div class="empty-state">Evidence collection pending.</div>{% endfor %}
   </div>
 </section>
@@ -38,6 +62,18 @@
     {% for item in incident.recommendations %}
     <article class="recommendation"><strong>{{ item.title }}</strong><code>{{ item.action_key }}</code><p>{{ item.rationale }}</p><div class="disabled-banner">Execution disabled in MVP · Executed: no</div></article>
     {% else %}<div class="empty-state">No recommendation generated.</div>{% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-heading"><h2>Analysis runs</h2><span class="muted">{{ incident.agent_runs|length }} runs</span></div>
+  <div class="run-list">
+  {% for run in incident.agent_runs %}
+    <article class="run-row {{ 'run-failed' if run.status == 'failed' else '' }}">
+      <span class="source-state {{ 'degraded' if run.status == 'failed' else 'available' }}">{{ run.status }}</span>
+      <div><strong>{{ run.workflow_version }}</strong><small>{{ run.started_at }} → {{ run.ended_at or 'running' }}</small>{% if run.error %}<p>{{ run.error }}</p>{% endif %}</div>
+    </article>
+  {% else %}<div class="empty-state">No analysis runs recorded.</div>{% endfor %}
   </div>
 </section>
 

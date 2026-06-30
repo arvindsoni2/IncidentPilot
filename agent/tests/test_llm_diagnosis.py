@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from agent.adapters.llm import LLMProvider, LLMProviderError
@@ -171,3 +172,22 @@ def test_report_contains_required_sections_and_safety_statement() -> None:
         assert f"## {section}" in report
     assert "No remediation action was executed" in report
     assert "executed: **no**" in report
+
+
+def test_report_correlates_timeline_and_evidence_timestamps() -> None:
+    analysis = LLMDiagnosisService(
+        provider=FakeProvider(response=valid_response())
+    ).enhance(baseline())
+    observed_at = datetime(2026, 6, 30, 10, 0, tzinfo=timezone.utc)
+    collected_at = datetime(2026, 6, 30, 10, 0, 1, tzinfo=timezone.utc)
+
+    report = SREReportGenerator().generate(
+        analysis,
+        timeline=[("Detected", observed_at)],
+        evidence_timestamps={
+            analysis.evidence[0].ref: collected_at,
+        },
+    )
+
+    assert "**Detected:** 2026-06-30T10:00:00+00:00" in report
+    assert "collected 2026-06-30T10:00:01+00:00" in report

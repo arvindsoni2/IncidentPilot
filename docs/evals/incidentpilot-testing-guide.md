@@ -101,3 +101,9 @@ make live-integration RUNTIME=podman
 
 The normal pytest suite continues to mock runtime and LLM boundaries, so only
 the marked live suite requires a container runtime.
+
+## Offline UI check
+
+The dashboard serves its pinned HTMX build from `/static/htmx-2.0.8.min.js`;
+it makes no browser request to a CDN. Version, upstream URL, license, and
+checksum are recorded in [Third-party static assets](../third-party-assets.md).

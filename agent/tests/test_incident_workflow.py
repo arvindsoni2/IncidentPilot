@@ -233,6 +233,8 @@ def test_fs_scenarios_end_to_end(
     assert len(incident.reports) == 1
     assert incident.reports[0].json_payload["service"] == "backend"
     assert incident.reports[0].json_payload["llm_status"] == "available"
+    assert len(incident.reports[0].json_payload["timeline"]) == 3
+    assert incident.reports[0].json_payload["evidence"][0]["collected_at"]
     assert incident.agent_runs[0].status == "completed"
 
 

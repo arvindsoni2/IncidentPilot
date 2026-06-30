@@ -1,14 +1,34 @@
 """Deterministic SRE-style Markdown report generation."""
 
+from datetime import datetime
+
 from agent.app.schemas import IncidentAnalysisJSON
 
 
 class SREReportGenerator:
-    def generate(self, analysis: IncidentAnalysisJSON) -> str:
+    def generate(
+        self,
+        analysis: IncidentAnalysisJSON,
+        *,
+        timeline: list[tuple[str, datetime]] | None = None,
+        evidence_timestamps: dict[str, datetime] | None = None,
+    ) -> str:
+        evidence_timestamps = evidence_timestamps or {}
         evidence = "\n".join(
-            f"- `{item.ref}` **{item.type}** ({item.source}): {item.summary}"
+            (
+                f"- `{item.ref}` **{item.type}** ({item.source})"
+                f"{self._timestamp_suffix(evidence_timestamps.get(item.ref))}: "
+                f"{item.summary}"
+            )
             for item in analysis.evidence
         ) or "- No evidence was collected."
+        timeline_lines = "\n".join(
+            f"- **{label}:** {timestamp.isoformat()}"
+            for label, timestamp in (timeline or [])
+        ) or (
+            "- Incident observed and evidence collected.\n"
+            "- Deterministic rules diagnosis completed."
+        )
         gaps = "\n".join(
             f"- {gap}" for gap in analysis.evidence_gaps
         ) or "- None recorded."
@@ -54,8 +74,7 @@ class SREReportGenerator:
 
 ## Timeline
 
-- Incident observed and evidence collected.
-- Deterministic rules diagnosis completed.
+{timeline_lines}
 - LLM status: `{analysis.llm_status}`.
 
 ## Evidence
@@ -84,3 +103,7 @@ class SREReportGenerator:
 
 > IncidentPilot MVP is read-only. No remediation action was executed.
 """
+
+    @staticmethod
+    def _timestamp_suffix(timestamp: datetime | None) -> str:
+        return f", collected {timestamp.isoformat()}" if timestamp else ""
