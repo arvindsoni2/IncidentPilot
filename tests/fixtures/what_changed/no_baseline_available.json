@@ -1,0 +1,6 @@
+{
+  "status": "no_baseline",
+  "counts": {"material": 0, "supporting_context": 0, "other": 0, "total": 0},
+  "llm_status": "not_attempted",
+  "message": "What Changed? comparison skipped because no last known healthy snapshot exists yet."
+}

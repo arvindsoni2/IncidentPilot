@@ -45,6 +45,16 @@ from agent.app.services.scenario_runner import (
     ScenarioRunner,
     ScenarioRunnerError,
 )
+from agent.app.services.what_changed import (
+    WhatChangedAdvisoryService,
+    compare_with_latest,
+    comparison_failed_result,
+    latest_healthy_snapshot,
+    render_what_changed_markdown,
+    save_healthy_snapshot,
+    snapshot_eligible,
+    snapshot_payload,
+)
 
 __all__ = [
     "CollectedEvidence",
@@ -83,4 +93,12 @@ __all__ = [
     "save_report",
     "save_eval_run",
     "resolve_configured_service",
+    "compare_with_latest",
+    "comparison_failed_result",
+    "latest_healthy_snapshot",
+    "render_what_changed_markdown",
+    "save_healthy_snapshot",
+    "snapshot_eligible",
+    "snapshot_payload",
+    "WhatChangedAdvisoryService",
 ]

@@ -14,24 +14,24 @@ class SREReportGenerator:
         evidence_timestamps: dict[str, datetime] | None = None,
     ) -> str:
         evidence_timestamps = evidence_timestamps or {}
-        evidence = "\n".join(
-            (
-                f"- `{item.ref}` **{item.type}** ({item.source})"
-                f"{self._timestamp_suffix(evidence_timestamps.get(item.ref))}: "
-                f"{item.summary}"
+        evidence = (
+            "\n".join(
+                (
+                    f"- `{item.ref}` **{item.type}** ({item.source})"
+                    f"{self._timestamp_suffix(evidence_timestamps.get(item.ref))}: "
+                    f"{item.summary}"
+                )
+                for item in analysis.evidence
             )
-            for item in analysis.evidence
-        ) or "- No evidence was collected."
+            or "- No evidence was collected."
+        )
         timeline_lines = "\n".join(
-            f"- **{label}:** {timestamp.isoformat()}"
-            for label, timestamp in (timeline or [])
+            f"- **{label}:** {timestamp.isoformat()}" for label, timestamp in (timeline or [])
         ) or (
             "- Incident observed and evidence collected.\n"
             "- Deterministic rules diagnosis completed."
         )
-        gaps = "\n".join(
-            f"- {gap}" for gap in analysis.evidence_gaps
-        ) or "- None recorded."
+        gaps = "\n".join(f"- {gap}" for gap in analysis.evidence_gaps) or "- None recorded."
         hypotheses = "\n".join(
             (
                 f"{item.rank}. **{item.cause}** "
@@ -47,12 +47,14 @@ class SREReportGenerator:
             )
             for item in analysis.recommendations
         )
-        verification = "\n".join(
-            f"- {step}" for step in analysis.verification_plan
-        ) or "- Re-run health and dependency checks after manual intervention."
-        follow_up = "\n".join(
-            f"- {item}" for item in analysis.follow_up_actions
-        ) or "- Review incident evidence and record the confirmed cause."
+        verification = (
+            "\n".join(f"- {step}" for step in analysis.verification_plan)
+            or "- Re-run health and dependency checks after manual intervention."
+        )
+        follow_up = (
+            "\n".join(f"- {item}" for item in analysis.follow_up_actions)
+            or "- Review incident evidence and record the confirmed cause."
+        )
 
         return f"""# Incident Report: INC-{analysis.incident_id:03d}
 

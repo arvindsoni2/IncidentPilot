@@ -1,0 +1,8 @@
+{
+  "before_ms": 200,
+  "after_ms": 1400,
+  "rule_id": "WC_HTTP_LATENCY_HIGH_INCREASE",
+  "severity": "high",
+  "materiality": "material",
+  "rank": 100
+}

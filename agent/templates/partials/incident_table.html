@@ -9,7 +9,12 @@
         <td><span class="severity {{ incident.severity }}">{{ incident.severity }}</span></td>
         <td><span class="status-pill">{{ incident.status }}</span></td>
         <td>{{ incident.trigger_type }}</td>
-        <td>{{ incident.summary or 'Analysis pending' }}</td>
+        <td>{{ incident.summary or 'Analysis pending' }}
+          {% if incident.reports and incident.reports[-1].json_payload.get('what_changed') %}
+          {% set wc = incident.reports[-1].json_payload['what_changed'] %}
+          <br><small>{% if wc.status == 'available' %}{{ wc.counts.total }} changes detected{% elif wc.status == 'no_baseline' %}No baseline{% else %}Comparison unavailable{% endif %}</small>
+          {% endif %}
+        </td>
         <td>{{ incident.detected_at.strftime('%Y-%m-%d %H:%M') }}</td>
         <td><a class="button compact secondary" href="/incidents/{{ incident.id }}">View</a></td>
       </tr>

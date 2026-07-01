@@ -99,9 +99,7 @@ class EvidenceCollector:
         if incident.service_id != service.id:
             raise ValueError("Incident does not belong to the requested service")
 
-        adapter = self.runtime_factory(
-            self.settings, service_runtime=service.runtime
-        )
+        adapter = self.runtime_factory(self.settings, service_runtime=service.runtime)
         evidence_records: list[IncidentEvidence] = []
 
         target_status = adapter.get_container_status(service.container_name)
@@ -160,18 +158,14 @@ class EvidenceCollector:
             dependency_adapter = self.runtime_factory(
                 self.settings, service_runtime=dependency.runtime
             )
-            dependency_status = dependency_adapter.get_container_status(
-                dependency.container_name
-            )
+            dependency_status = dependency_adapter.get_container_status(dependency.container_name)
             dependencies[dependency_name] = dependency_status
             evidence_records.append(
                 self._store(
                     incident_id,
                     type="dependency_status",
                     source=dependency.runtime,
-                    summary=self._status_summary(
-                        dependency_name, dependency_status
-                    ),
+                    summary=self._status_summary(dependency_name, dependency_status),
                     payload={
                         "dependency": dependency_name,
                         **asdict(dependency_status),
@@ -267,9 +261,7 @@ class EvidenceCollector:
             raw_payload=payload,
         )
 
-    def _check_health(
-        self, url: str | None
-    ) -> HealthEndpointEvidence | None:
+    def _check_health(self, url: str | None) -> HealthEndpointEvidence | None:
         if not url:
             return None
         client = self.http_client or httpx.Client(
@@ -278,9 +270,7 @@ class EvidenceCollector:
         should_close = self.http_client is None
         started = perf_counter()
         try:
-            response = client.get(
-                url, timeout=self.settings.evidence.health_timeout_seconds
-            )
+            response = client.get(url, timeout=self.settings.evidence.health_timeout_seconds)
             latency = round((perf_counter() - started) * 1000, 2)
             return HealthEndpointEvidence(
                 url=url,
@@ -304,18 +294,14 @@ class EvidenceCollector:
 
     def _collect_metrics(self) -> MetricsSnapshot:
         if not self.settings.metrics.enabled:
-            return MetricsSnapshot(
-                available=False, error="Prometheus collection is disabled"
-            )
+            return MetricsSnapshot(available=False, error="Prometheus collection is disabled")
         adapter = self.metrics_adapter or PrometheusMetricsAdapter(
             base_url=self.settings.metrics.base_url,
             timeout_seconds=self.settings.metrics.timeout_seconds,
         )
         return adapter.query_snapshot(self.settings.metrics.queries)
 
-    def _recent_deployments(
-        self, service_id: int, *, limit: int = 10
-    ) -> list[dict[str, Any]]:
+    def _recent_deployments(self, service_id: int, *, limit: int = 10) -> list[dict[str, Any]]:
         records = self.session.scalars(
             select(DeploymentEvent)
             .where(DeploymentEvent.service_id == service_id)

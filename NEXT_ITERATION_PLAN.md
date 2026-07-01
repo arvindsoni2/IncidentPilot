@@ -1,5 +1,10 @@
 # IncidentPilot Next Iteration Plan
 
+> Status (v0.3 reconnaissance): the release-engineering, migration/lifecycle,
+> FS-001/FS-002 integration, and local-product foundations below were completed
+> in v0.2 and verified before What Changed? implementation. They remain regression
+> requirements rather than unfinished prerequisites.
+
 Prompt 15 is deliberately deferred. The next iteration should harden the
 read-only product before any remediation design begins.
 

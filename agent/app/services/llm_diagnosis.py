@@ -9,9 +9,7 @@ from pydantic import ValidationError
 from agent.adapters.llm import LLMProvider, LLMProviderError
 from agent.app.schemas import IncidentAnalysisJSON, LLMAnalysisResponse
 
-PROMPT_PATH = (
-    Path(__file__).resolve().parents[2] / "prompts" / "incident_diagnosis.md"
-)
+PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompts" / "incident_diagnosis.md"
 
 
 class LLMDiagnosisService:
@@ -24,9 +22,7 @@ class LLMDiagnosisService:
         self.provider = provider
         self.prompt_path = prompt_path
 
-    def enhance(
-        self, baseline: IncidentAnalysisJSON
-    ) -> IncidentAnalysisJSON:
+    def enhance(self, baseline: IncidentAnalysisJSON) -> IncidentAnalysisJSON:
         prompt = self._build_prompt(baseline)
         try:
             raw = self.provider.generate_json(prompt)
@@ -65,38 +61,26 @@ class LLMDiagnosisService:
         for hypothesis in response.hypotheses:
             unknown = set(hypothesis.evidence_refs) - known_refs
             if unknown:
-                raise ValueError(
-                    f"LLM referenced unknown evidence: {sorted(unknown)}"
-                )
+                raise ValueError(f"LLM referenced unknown evidence: {sorted(unknown)}")
 
         allowed_actions = {
-            recommendation.action_key: recommendation
-            for recommendation in baseline.recommendations
+            recommendation.action_key: recommendation for recommendation in baseline.recommendations
         }
         proposed_actions = {
-            recommendation.action_key
-            for recommendation in response.recommendations
+            recommendation.action_key for recommendation in response.recommendations
         }
         if not proposed_actions <= allowed_actions.keys():
-            raise ValueError(
-                "LLM proposed an action outside the deterministic rule output"
-            )
+            raise ValueError("LLM proposed an action outside the deterministic rule output")
         for recommendation in response.recommendations:
             policy = allowed_actions[recommendation.action_key]
             if (
-                recommendation.requires_approval
-                != policy.requires_approval
-                or recommendation.allowed_by_policy
-                != policy.allowed_by_policy
+                recommendation.requires_approval != policy.requires_approval
+                or recommendation.allowed_by_policy != policy.allowed_by_policy
             ):
-                raise ValueError(
-                    "LLM attempted to alter deterministic action policy"
-                )
+                raise ValueError("LLM attempted to alter deterministic action policy")
 
     @staticmethod
-    def _fallback(
-        baseline: IncidentAnalysisJSON, reason: str
-    ) -> IncidentAnalysisJSON:
+    def _fallback(baseline: IncidentAnalysisJSON, reason: str) -> IncidentAnalysisJSON:
         gaps = list(baseline.evidence_gaps)
         gaps.append(f"LLM unavailable or invalid; rules-only fallback: {reason}")
         return baseline.model_copy(

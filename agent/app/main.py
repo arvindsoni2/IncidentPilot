@@ -24,9 +24,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.settings = settings or load_settings()
     application.state.database_engine = None
     application.state.session_factory = None
-    application.state.templates = Jinja2Templates(
-        directory=str(TEMPLATE_DIRECTORY)
-    )
+    application.state.templates = Jinja2Templates(directory=str(TEMPLATE_DIRECTORY))
     application.state.workflow_factory = None
     application.state.scenario_runner_factory = None
     application.mount(

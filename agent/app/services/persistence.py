@@ -70,25 +70,15 @@ def resolve_configured_service(
     )
     if service is not None:
         if configured is not None:
-            service.container_name = configured.get(
-                "container_name", service.container_name
-            )
-            service.runtime = (
-                configured.get("runtime") or settings.runtime.default
-            )
-            service.health_url = configured.get(
-                "health_url", service.health_url
-            )
+            service.container_name = configured.get("container_name", service.container_name)
+            service.runtime = configured.get("runtime") or settings.runtime.default
+            service.health_url = configured.get("health_url", service.health_url)
             service.polling_interval_seconds = configured.get(
                 "polling_interval_seconds",
                 settings.polling.default_interval_seconds,
             )
-            service.criticality = configured.get(
-                "criticality", service.criticality
-            )
-            service.dependencies = configured.get(
-                "dependencies", service.dependencies
-            )
+            service.criticality = configured.get("criticality", service.criticality)
+            service.dependencies = configured.get("dependencies", service.dependencies)
             service.enabled = configured.get("enabled", service.enabled)
             session.commit()
             session.refresh(service)
@@ -111,9 +101,7 @@ def resolve_configured_service(
     )
 
 
-def list_services(
-    session: Session, *, enabled_only: bool = False
-) -> list[Service]:
+def list_services(session: Session, *, enabled_only: bool = False) -> list[Service]:
     query = select(Service).order_by(Service.name)
     if enabled_only:
         query = query.where(Service.enabled.is_(True))
@@ -172,10 +160,7 @@ def add_hypotheses(
     incident_id: int,
     hypotheses: Iterable[dict[str, Any]],
 ) -> list[Hypothesis]:
-    records = [
-        Hypothesis(incident_id=incident_id, **hypothesis)
-        for hypothesis in hypotheses
-    ]
+    records = [Hypothesis(incident_id=incident_id, **hypothesis) for hypothesis in hypotheses]
     session.add_all(records)
     session.commit()
     for record in records:
@@ -194,9 +179,7 @@ def add_recommendations(
         safe_values = dict(recommendation)
         safe_values["execution_enabled_in_mvp"] = False
         safe_values["executed"] = False
-        records.append(
-            Recommendation(incident_id=incident_id, **safe_values)
-        )
+        records.append(Recommendation(incident_id=incident_id, **safe_values))
     session.add_all(records)
     session.commit()
     for record in records:
@@ -282,9 +265,7 @@ def save_eval_run(
     return run
 
 
-def list_eval_runs(
-    session: Session, *, limit: int = 100
-) -> list[EvalRun]:
+def list_eval_runs(session: Session, *, limit: int = 100) -> list[EvalRun]:
     query = (
         select(EvalRun)
         .options(selectinload(EvalRun.checks))
@@ -294,9 +275,7 @@ def list_eval_runs(
     return list(session.scalars(query))
 
 
-def delete_eval_runs_before(
-    session: Session, *, cutoff: datetime
-) -> int:
+def delete_eval_runs_before(session: Session, *, cutoff: datetime) -> int:
     runs = list(
         session.scalars(
             select(EvalRun)
@@ -317,7 +296,7 @@ def list_incidents(
 ) -> list[Incident]:
     query = (
         select(Incident)
-        .options(selectinload(Incident.service))
+        .options(selectinload(Incident.service), selectinload(Incident.reports))
         .order_by(Incident.detected_at.desc())
     )
     if status is not None:
@@ -325,9 +304,7 @@ def list_incidents(
     return list(session.scalars(query))
 
 
-def get_incident_detail(
-    session: Session, incident_id: int
-) -> Incident | None:
+def get_incident_detail(session: Session, incident_id: int) -> Incident | None:
     query = (
         select(Incident)
         .where(Incident.id == incident_id)

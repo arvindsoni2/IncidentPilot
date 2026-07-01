@@ -9,9 +9,7 @@ from typing import Mapping
 
 from agent.app.config import Settings
 
-DEFAULT_COMPOSE_FILE = (
-    Path(__file__).resolve().parents[3] / "infra" / "compose.yaml"
-)
+DEFAULT_COMPOSE_FILE = Path(__file__).resolve().parents[3] / "infra" / "compose.yaml"
 DEMO_CONTAINER_PREFIX = "incidentpilot-demo-"
 ALLOWED_DEMO_TARGETS = {
     "backend": "incidentpilot-demo-backend",
@@ -106,9 +104,7 @@ class ScenarioRunner:
     def reset(self) -> ScenarioResult:
         return self._execute(RESET_SCENARIO)
 
-    def build_command(
-        self, definition: ScenarioDefinition
-    ) -> tuple[str, ...]:
+    def build_command(self, definition: ScenarioDefinition) -> tuple[str, ...]:
         self._validate_definition(definition)
         runtime = self.settings.runtime.default.lower()
         if runtime == "docker":
@@ -144,15 +140,10 @@ class ScenarioRunner:
         except subprocess.TimeoutExpired as error:
             raise ScenarioRunnerError(
                 code="timeout",
-                message=(
-                    f"Scenario {definition.id} exceeded "
-                    f"{self.timeout_seconds} seconds"
-                ),
+                message=(f"Scenario {definition.id} exceeded {self.timeout_seconds} seconds"),
             ) from error
         except OSError as error:
-            raise ScenarioRunnerError(
-                code="runtime_unavailable", message=str(error)
-            ) from error
+            raise ScenarioRunnerError(code="runtime_unavailable", message=str(error)) from error
         if completed.returncode != 0:
             raise ScenarioRunnerError(
                 code="command_failed",
@@ -190,8 +181,5 @@ class ScenarioRunner:
             if expected != container_name:
                 raise ScenarioRunnerError(
                     code="unsafe_target",
-                    message=(
-                        f"Service {service} is not mapped to an allowlisted "
-                        "demo container"
-                    ),
+                    message=(f"Service {service} is not mapped to an allowlisted demo container"),
                 )

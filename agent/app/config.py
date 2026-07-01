@@ -115,10 +115,7 @@ def load_settings(
     """Load YAML configuration, then apply environment overrides."""
 
     load_dotenv(dotenv_path=env_path, override=False)
-    selected_path = Path(
-        config_path
-        or os.getenv("INCIDENTPILOT_CONFIG_FILE", "config.yaml")
-    )
+    selected_path = Path(config_path or os.getenv("INCIDENTPILOT_CONFIG_FILE", "config.yaml"))
     yaml_values: dict[str, Any] = {}
     if selected_path.is_file():
         loaded = yaml.safe_load(selected_path.read_text(encoding="utf-8"))

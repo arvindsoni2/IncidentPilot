@@ -19,6 +19,43 @@
 </section>
 {% endif %}
 
+{% if incident.reports and incident.reports[-1].json_payload.get('what_changed') %}
+{% set wc = incident.reports[-1].json_payload['what_changed'] %}
+<section class="panel what-changed">
+  <div class="section-heading"><h2>What Changed?</h2>
+    {% if wc.status == 'available' %}<span class="status-pill">{{ wc.counts.total }} changes detected</span>
+    {% elif wc.status == 'no_baseline' %}<span class="status-pill">No baseline</span>
+    {% else %}<span class="status-pill">Comparison unavailable</span>{% endif %}
+  </div>
+  <p>{{ wc.rule_summary }}</p>
+  {% if wc.status == 'no_baseline' %}
+  <div class="empty-state">No healthy baseline is available yet. What Changed? comparison will appear after IncidentPilot observes a fully healthy runtime, HTTP, and dependency evidence set.</div>
+  {% elif wc.status == 'comparison_failed' %}
+  <div class="alert alert-warning">What Changed? comparison unavailable; normal diagnosis completed.</div>
+  {% else %}
+    {% for heading, key in [('Material Changes', 'material_changes'), ('Supporting Context', 'supporting_context')] %}
+    <h3>{{ heading }}</h3>
+    {% for card in wc[key] %}
+    <article class="evidence-list">
+      <strong>{{ card.severity|upper }} — {{ card.title }}</strong>
+      <p>{{ card.before.value }} → {{ card.after.value }}</p>
+      <p>{{ card.why_it_matters }}</p>
+      <small>Evidence: {{ card.evidence_refs|join(', ') }} · Rule: {{ card.rule_id }}</small>
+    </article>
+    {% else %}<p class="muted">None detected.</p>{% endfor %}
+    {% endfor %}
+    <details><summary>Other Changes ({{ wc.counts.other }})</summary>
+      {% for card in wc.other_changes %}<p><strong>{{ card.title }}</strong> — {{ card.why_it_matters }}</p>
+      {% else %}<p>No other changes detected.</p>{% endfor %}
+    </details>
+    {% if wc.llm.status in ['failed', 'validation_failed'] %}
+    <p class="muted">AI advisory unavailable; deterministic analysis completed.</p>
+    <details><summary>Advisory diagnostics</summary><p>Status: {{ wc.llm.status }}; retry attempted: {{ wc.llm.retry_attempted }}; authoritative: no.</p></details>
+    {% endif %}
+  {% endif %}
+</section>
+{% endif %}
+
 <section class="panel">
   <h2>Timeline</h2>
   <ol class="timeline">

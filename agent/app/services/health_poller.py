@@ -52,9 +52,7 @@ class HealthPoller:
         return list_services(self.session, enabled_only=True)
 
     def check_service(self, service_name: str) -> PollResult:
-        service = resolve_configured_service(
-            self.session, self.settings, service_name
-        )
+        service = resolve_configured_service(self.session, self.settings, service_name)
         health_check = self._perform_check(service)
         self.session.add(health_check)
         self.session.commit()
@@ -82,10 +80,7 @@ class HealthPoller:
             trigger_type="health_poll",
             status="new",
             severity=self._candidate_severity(service),
-            summary=(
-                f"Health polling detected {health_check.status} "
-                f"service {service.name}"
-            ),
+            summary=(f"Health polling detected {health_check.status} service {service.name}"),
             llm_status="not_requested",
         )
         return PollResult(
@@ -101,25 +96,17 @@ class HealthPoller:
         ]
 
     def run_forever(self) -> None:
-        services = [
-            service
-            for service in self.configured_services()
-            if service.health_url
-        ]
+        services = [service for service in self.configured_services() if service.health_url]
         next_checks = {service.id: 0.0 for service in services}
         while True:
             now = time.monotonic()
             for service in services:
                 if now >= next_checks[service.id]:
                     self.check_service(service.name)
-                    next_checks[service.id] = (
-                        now + service.polling_interval_seconds
-                    )
+                    next_checks[service.id] = now + service.polling_interval_seconds
             time.sleep(1)
 
-    def list_health_checks(
-        self, *, limit: int = 100
-    ) -> list[HealthCheckResult]:
+    def list_health_checks(self, *, limit: int = 100) -> list[HealthCheckResult]:
         return list(
             self.session.scalars(
                 select(HealthCheckResult)
@@ -191,9 +178,7 @@ class HealthPoller:
                 .limit(3)
             )
         )
-        if len(latest) < 3 or any(
-            check.status != "healthy" for check in latest
-        ):
+        if len(latest) < 3 or any(check.status != "healthy" for check in latest):
             return []
         active_incidents = list(
             self.session.scalars(

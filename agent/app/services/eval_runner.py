@@ -68,20 +68,14 @@ class EvalRunner:
     ) -> None:
         self.settings = settings
         self.golden_directory = golden_directory
-        self.output_directory = output_directory or Path(
-            settings.evals.output_directory
-        )
+        self.output_directory = output_directory or Path(settings.evals.output_directory)
         self.session = session
         self.rules = RuleDiagnosisEngine()
         self.reports = SREReportGenerator()
 
-    def run(
-        self, scenario_id: str | None = None
-    ) -> list[EvalResult]:
+    def run(self, scenario_id: str | None = None) -> list[EvalResult]:
         scenarios = (
-            [self._normalise_scenario(scenario_id)]
-            if scenario_id
-            else list(SUPPORTED_SCENARIOS)
+            [self._normalise_scenario(scenario_id)] if scenario_id else list(SUPPORTED_SCENARIOS)
         )
         results = [self._evaluate(item) for item in scenarios]
         for result in results:
@@ -93,19 +87,14 @@ class EvalRunner:
                     passed=result.passed,
                     model=result.model,
                     prompt_versions=result.prompt_versions,
-                    checks=[
-                        check.model_dump(mode="json")
-                        for check in result.checks
-                    ],
+                    checks=[check.model_dump(mode="json") for check in result.checks],
                     output_path=str(output_path),
                 )
         return results
 
     def _evaluate(self, scenario_id: str) -> EvalResult:
         expected = self._load_expected(scenario_id)
-        analysis = self.rules.diagnose(
-            self._fixture_context(scenario_id), llm_available=False
-        )
+        analysis = self.rules.diagnose(self._fixture_context(scenario_id), llm_available=False)
         report = self.reports.generate(analysis)
         checks = self._checks(
             analysis=analysis,
@@ -133,13 +122,9 @@ class EvalRunner:
             schema_valid = True
         except ValueError:
             schema_valid = False
-        sections_present = all(
-            f"## {section}" in report
-            for section in REQUIRED_REPORT_SECTIONS
-        )
+        sections_present = all(f"## {section}" in report for section in REQUIRED_REPORT_SECTIONS)
         no_action_executed = all(
-            not recommendation.executed
-            and not recommendation.execution_enabled_in_mvp
+            not recommendation.executed and not recommendation.execution_enabled_in_mvp
             for recommendation in analysis.recommendations
         )
         return [
@@ -152,8 +137,7 @@ class EvalRunner:
             ),
             EvalCheck(
                 name="severity_present",
-                passed=analysis.severity
-                in {"low", "medium", "high", "critical"},
+                passed=analysis.severity in {"low", "medium", "high", "critical"},
                 actual=analysis.severity,
             ),
             EvalCheck(
@@ -163,8 +147,7 @@ class EvalRunner:
             ),
             EvalCheck(
                 name="rank1_cause_correct",
-                passed=analysis.hypotheses[0].cause
-                == expected["rank1_cause"],
+                passed=analysis.hypotheses[0].cause == expected["rank1_cause"],
                 expected=expected["rank1_cause"],
                 actual=analysis.hypotheses[0].cause,
             ),
@@ -175,8 +158,7 @@ class EvalRunner:
             ),
             EvalCheck(
                 name="recommendation_action_correct",
-                passed=analysis.recommendations[0].action_key
-                == expected["recommendation_action"],
+                passed=analysis.recommendations[0].action_key == expected["recommendation_action"],
                 expected=expected["recommendation_action"],
                 actual=analysis.recommendations[0].action_key,
             ),
@@ -193,8 +175,7 @@ class EvalRunner:
             ),
             EvalCheck(
                 name="llm_status_recorded",
-                passed=analysis.llm_status
-                in {"not_requested", "available", "unavailable"},
+                passed=analysis.llm_status in {"not_requested", "available", "unavailable"},
                 actual=analysis.llm_status,
             ),
         ]
@@ -205,12 +186,8 @@ class EvalRunner:
 
     def _persist(self, result: EvalResult) -> Path:
         self.output_directory.mkdir(parents=True, exist_ok=True)
-        timestamp = datetime.now(timezone.utc).strftime(
-            "%Y%m%dT%H%M%S%fZ"
-        )
-        path = self.output_directory / (
-            f"{result.scenario_id.lower()}-{timestamp}.json"
-        )
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        path = self.output_directory / (f"{result.scenario_id.lower()}-{timestamp}.json")
         path.write_text(
             result.model_dump_json(indent=2) + "\n",
             encoding="utf-8",
@@ -233,9 +210,7 @@ class EvalRunner:
                 type="container_status",
                 source="docker",
                 summary=(
-                    "backend container is exited"
-                    if fs001
-                    else "backend container is running"
+                    "backend container is exited" if fs001 else "backend container is running"
                 ),
             ),
             CollectedEvidence(
@@ -255,9 +230,7 @@ class EvalRunner:
                 type="dependency_status",
                 source="docker",
                 summary=(
-                    "postgres container is running"
-                    if fs001
-                    else "postgres container is exited"
+                    "postgres container is running" if fs001 else "postgres container is exited"
                 ),
             ),
             CollectedEvidence(
@@ -298,9 +271,7 @@ class EvalRunner:
                     running=fs001,
                 )
             },
-            metrics=MetricsSnapshot(
-                available=False, error="fixture degraded mode"
-            ),
+            metrics=MetricsSnapshot(available=False, error="fixture degraded mode"),
             evidence_refs=[item.id for item in evidence],
             evidence_items=evidence,
         )

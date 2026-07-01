@@ -21,9 +21,7 @@ def mark_incident_resolved(
     if consecutive_successes is not None and consecutive_successes < 3:
         return incident
     if incident.status not in {"new", "analyzing", "diagnosed", "failed"}:
-        raise ValueError(
-            f"Cannot resolve incident in status {incident.status}"
-        )
+        raise ValueError(f"Cannot resolve incident in status {incident.status}")
     incident.status = "resolved"
     incident.resolved_at = datetime.now(timezone.utc)
     session.commit()

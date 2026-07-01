@@ -41,6 +41,7 @@ class ContainerStatus:
     state: str = "unknown"
     running: bool = False
     health: str | None = None
+    latency_ms: float | None = None
     error: RuntimeErrorDetail | None = None
 
 
@@ -72,6 +73,7 @@ class ContainerMetadata:
     created_at: str | None = None
     labels: dict[str, str] = field(default_factory=dict)
     ports: dict[str, Any] = field(default_factory=dict)
+    restart_count: int = 0
     error: RuntimeErrorDetail | None = None
 
 
@@ -100,14 +102,10 @@ class ContainerRuntimeAdapter(ABC):
     ) -> LogEvidence: ...
 
     @abstractmethod
-    def inspect_healthcheck(
-        self, container_name: str
-    ) -> HealthCheckEvidence: ...
+    def inspect_healthcheck(self, container_name: str) -> HealthCheckEvidence: ...
 
     @abstractmethod
-    def get_container_metadata(
-        self, container_name: str
-    ) -> ContainerMetadata: ...
+    def get_container_metadata(self, container_name: str) -> ContainerMetadata: ...
 
 
 class CliContainerRuntimeAdapter(ContainerRuntimeAdapter):
@@ -136,8 +134,7 @@ class CliContainerRuntimeAdapter(ContainerRuntimeAdapter):
                 error=RuntimeErrorDetail(
                     code="timeout",
                     message=(
-                        f"{self.binary} did not respond within "
-                        f"{self.timeout_seconds} seconds"
+                        f"{self.binary} did not respond within {self.timeout_seconds} seconds"
                     ),
                     command=tuple(command),
                 )
@@ -180,9 +177,7 @@ class CliContainerRuntimeAdapter(ContainerRuntimeAdapter):
         try:
             self._validate_container_name(container_name)
         except ValueError as error:
-            return None, RuntimeErrorDetail(
-                code="invalid_container_name", message=str(error)
-            )
+            return None, RuntimeErrorDetail(code="invalid_container_name", message=str(error))
         result = self._run(["inspect", container_name])
         if result.error:
             return None, result.error
@@ -291,13 +286,9 @@ class CliContainerRuntimeAdapter(ContainerRuntimeAdapter):
                 container_name=container_name,
                 since_seconds=since_seconds,
                 max_bytes=max_bytes,
-                error=RuntimeErrorDetail(
-                    code="invalid_container_name", message=str(error)
-                ),
+                error=RuntimeErrorDetail(code="invalid_container_name", message=str(error)),
             )
-        result = self._run(
-            ["logs", "--since", f"{since_seconds}s", container_name]
-        )
+        result = self._run(["logs", "--since", f"{since_seconds}s", container_name])
         if result.error:
             return LogEvidence(
                 container_name=container_name,
@@ -317,14 +308,10 @@ class CliContainerRuntimeAdapter(ContainerRuntimeAdapter):
             truncated=truncated,
         )
 
-    def inspect_healthcheck(
-        self, container_name: str
-    ) -> HealthCheckEvidence:
+    def inspect_healthcheck(self, container_name: str) -> HealthCheckEvidence:
         record, error = self._inspect(container_name)
         if error or record is None:
-            return HealthCheckEvidence(
-                container_name=container_name, error=error
-            )
+            return HealthCheckEvidence(container_name=container_name, error=error)
         health = (record.get("State") or {}).get("Health")
         if not health:
             return HealthCheckEvidence(container_name=container_name)
@@ -339,14 +326,10 @@ class CliContainerRuntimeAdapter(ContainerRuntimeAdapter):
             recent_output=recent_output,
         )
 
-    def get_container_metadata(
-        self, container_name: str
-    ) -> ContainerMetadata:
+    def get_container_metadata(self, container_name: str) -> ContainerMetadata:
         record, error = self._inspect(container_name)
         if error or record is None:
-            return ContainerMetadata(
-                container_name=container_name, error=error
-            )
+            return ContainerMetadata(container_name=container_name, error=error)
         config = record.get("Config") or {}
         network = record.get("NetworkSettings") or {}
         return ContainerMetadata(
@@ -357,4 +340,5 @@ class CliContainerRuntimeAdapter(ContainerRuntimeAdapter):
             created_at=record.get("Created"),
             labels=self._normalise_labels(config.get("Labels")),
             ports=network.get("Ports") or {},
+            restart_count=int(record.get("RestartCount") or 0),
         )

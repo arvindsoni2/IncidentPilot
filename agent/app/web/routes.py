@@ -52,19 +52,11 @@ def _sync_services(request: Request, session: Session) -> list[Service]:
     settings = request.app.state.settings
     for configured in settings.services:
         if configured.get("enabled", True):
-            resolve_configured_service(
-                session, settings, configured["name"]
-            )
-    return list(
-        session.scalars(
-            select(Service).order_by(Service.name)
-        )
-    )
+            resolve_configured_service(session, settings, configured["name"])
+    return list(session.scalars(select(Service).order_by(Service.name)))
 
 
-def _service_cards(
-    request: Request, session: Session
-) -> list[dict[str, Any]]:
+def _service_cards(request: Request, session: Session) -> list[dict[str, Any]]:
     cards: list[dict[str, Any]] = []
     for service in _sync_services(request, session):
         latest = session.scalar(
@@ -120,9 +112,7 @@ async def dashboard(
             page="dashboard",
             service_cards=_service_cards(request, session),
             active_incidents=[
-                item
-                for item in incidents
-                if item.status in {"new", "analyzing", "diagnosed"}
+                item for item in incidents if item.status in {"new", "analyzing", "diagnosed"}
             ],
             recent_incidents=incidents[:5],
         ),
@@ -218,11 +208,7 @@ async def reports_page(
     request: Request,
     session: Session = Depends(database_session),
 ) -> HTMLResponse:
-    incidents = [
-        incident
-        for incident in list_incidents(session)
-        if incident.reports
-    ]
+    incidents = [incident for incident in list_incidents(session) if incident.reports]
     return _templates(request).TemplateResponse(
         request=request,
         name="reports.html",
@@ -322,8 +308,6 @@ async def report_download_markdown(
         report.markdown,
         media_type="text/markdown",
         headers={
-            "Content-Disposition": (
-                f'attachment; filename="{format_incident_ref(incident.id)}.md"'
-            )
+            "Content-Disposition": (f'attachment; filename="{format_incident_ref(incident.id)}.md"')
         },
     )

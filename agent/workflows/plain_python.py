@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
@@ -13,12 +14,17 @@ from agent.app.services import (
     LLMDiagnosisService,
     RuleDiagnosisEngine,
     SREReportGenerator,
+    WhatChangedAdvisoryService,
     add_hypotheses,
     add_recommendations,
+    compare_with_latest,
+    comparison_failed_result,
     create_agent_run,
     create_incident,
     finish_agent_run,
+    render_what_changed_markdown,
     resolve_configured_service,
+    save_healthy_snapshot,
     save_report,
 )
 from agent.workflows.base import (
@@ -33,6 +39,7 @@ PROMPT_VERSIONS = {
     "hypothesis_ranking": "v1",
     "incident_report": "v1",
 }
+LOGGER = logging.getLogger(__name__)
 
 
 class PlainPythonIncidentWorkflow(IncidentWorkflow):
@@ -45,6 +52,7 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
         rules_engine: RuleDiagnosisEngine | None = None,
         llm_service: LLMDiagnosisService | None = None,
         report_generator: SREReportGenerator | None = None,
+        what_changed_advisory: WhatChangedAdvisoryService | None = None,
     ) -> None:
         self.settings = settings
         self.session = session
@@ -52,17 +60,23 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
             settings=settings, session=session
         )
         self.rules_engine = rules_engine or RuleDiagnosisEngine()
-        self.llm_service = llm_service or LLMDiagnosisService(
-            provider=create_llm_provider(settings)
+        provider = create_llm_provider(settings)
+        self.llm_service = llm_service or LLMDiagnosisService(provider=provider)
+        self.what_changed_advisory = (
+            what_changed_advisory
+            if what_changed_advisory is not None
+            else (
+                WhatChangedAdvisoryService(provider, settings.llm.model)
+                if llm_service is None
+                else None
+            )
         )
         self.report_generator = report_generator or SREReportGenerator()
 
     def analyze_service(
         self, service_name: str, trigger_type: str = "manual"
     ) -> IncidentAnalysisResult:
-        service = resolve_configured_service(
-            self.session, self.settings, service_name
-        )
+        service = resolve_configured_service(self.session, self.settings, service_name)
         incident = create_incident(
             self.session,
             service_id=service.id,
@@ -87,8 +101,24 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
                 service_name=service.name,
                 incident_id=incident.id,
             )
+            try:
+                what_changed = compare_with_latest(
+                    self.session,
+                    service,
+                    context,
+                    llm_configured=bool(self.settings.llm.provider),
+                )
+            except Exception:
+                LOGGER.exception("What Changed comparison failed")
+                what_changed = comparison_failed_result(
+                    service,
+                    context,
+                    llm_configured=bool(self.settings.llm.provider),
+                )
             baseline = self.rules_engine.diagnose(context)
             analysis = self.llm_service.enhance(baseline)
+            if self.what_changed_advisory is not None:
+                what_changed = self.what_changed_advisory.enhance(what_changed)
             diagnosed_at = datetime.now(timezone.utc)
             timeline = [
                 ("Detected", incident.detected_at),
@@ -105,7 +135,9 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
                 timeline=timeline,
                 evidence_timestamps=evidence_timestamps,
             )
+            markdown += render_what_changed_markdown(what_changed)
             report_payload = analysis.model_dump(mode="json")
+            report_payload["what_changed"] = what_changed.model_dump(mode="json")
             report_payload["timeline"] = [
                 {
                     "event": label,
@@ -115,25 +147,17 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
             ]
             for item in report_payload["evidence"]:
                 collected_at = evidence_timestamps.get(item["ref"])
-                item["collected_at"] = (
-                    collected_at.isoformat() if collected_at else None
-                )
+                item["collected_at"] = collected_at.isoformat() if collected_at else None
 
             add_hypotheses(
                 self.session,
                 incident_id=incident.id,
-                hypotheses=[
-                    item.model_dump()
-                    for item in analysis.hypotheses
-                ],
+                hypotheses=[item.model_dump() for item in analysis.hypotheses],
             )
             add_recommendations(
                 self.session,
                 incident_id=incident.id,
-                recommendations=[
-                    item.model_dump()
-                    for item in analysis.recommendations
-                ],
+                recommendations=[item.model_dump() for item in analysis.recommendations],
             )
             save_report(
                 self.session,
@@ -141,6 +165,7 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
                 markdown=markdown,
                 json_payload=report_payload,
             )
+            save_healthy_snapshot(self.session, service, context)
 
             incident.status = "diagnosed"
             incident.severity = analysis.severity
@@ -161,7 +186,5 @@ class PlainPythonIncidentWorkflow(IncidentWorkflow):
             incident.status = "failed"
             incident.summary = f"Analysis failed: {error}"
             self.session.commit()
-            finish_agent_run(
-                self.session, run, status="failed", error=str(error)
-            )
+            finish_agent_run(self.session, run, status="failed", error=str(error))
             raise

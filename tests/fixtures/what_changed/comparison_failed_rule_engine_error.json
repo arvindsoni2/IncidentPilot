@@ -1,0 +1,7 @@
+{
+  "status": "comparison_failed",
+  "reason": "rule_engine_error",
+  "message": "The What Changed rule engine failed before comparison could be completed.",
+  "normal_diagnosis_continued": true,
+  "fallback_used": "normal_diagnosis_only"
+}

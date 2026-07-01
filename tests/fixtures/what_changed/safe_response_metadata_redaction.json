@@ -1,0 +1,10 @@
+{
+  "input_url": "https://user:secret@example.test/health?token=secret",
+  "expected": {
+    "scheme": "https",
+    "host": "example.test",
+    "path_without_query": "/health",
+    "redaction_applied": true
+  },
+  "forbidden": ["user", "secret", "token", "Authorization", "Cookie", "body"]
+}

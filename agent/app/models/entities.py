@@ -37,9 +37,7 @@ class Service(Base):
     criticality: Mapped[str] = mapped_column(String(32), default="medium")
     dependencies: Mapped[list[str]] = mapped_column(JSON, default=list)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
     )
@@ -53,6 +51,26 @@ class Service(Base):
     incidents: Mapped[list[Incident]] = relationship(
         back_populates="service", cascade="all, delete-orphan"
     )
+    healthy_snapshots: Mapped[list[HealthySnapshot]] = relationship(
+        back_populates="service", cascade="all, delete-orphan"
+    )
+
+
+class HealthySnapshot(Base):
+    __tablename__ = "healthy_snapshots"
+
+    snapshot_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    service_id: Mapped[int] = mapped_column(
+        ForeignKey("services.id", ondelete="CASCADE"), index=True
+    )
+    service_identity: Mapped[dict[str, Any]] = mapped_column(JSON)
+    evidence_payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, index=True
+    )
+
+    service: Mapped[Service] = relationship(back_populates="healthy_snapshots")
 
 
 class HealthCheckResult(Base):
@@ -112,21 +130,13 @@ class Incident(Base):
     severity: Mapped[str] = mapped_column(String(32), default="medium")
     trigger_type: Mapped[str] = mapped_column(String(64))
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     detected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, index=True
     )
-    diagnosed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    resolved_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    closed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    diagnosed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     llm_status: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     service: Mapped[Service] = relationship(back_populates="incidents")
@@ -159,12 +169,8 @@ class IncidentEvidence(Base):
     type: Mapped[str] = mapped_column(String(64), index=True)
     source: Mapped[str] = mapped_column(String(255))
     summary: Mapped[str] = mapped_column(Text)
-    raw_payload: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(
-        JSON, nullable=True
-    )
-    collected_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    raw_payload: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     incident: Mapped[Incident] = relationship(back_populates="evidence")
 
@@ -214,9 +220,7 @@ class Recommendation(Base):
     rationale: Mapped[str] = mapped_column(Text)
     requires_approval: Mapped[bool] = mapped_column(Boolean, default=True)
     allowed_by_policy: Mapped[bool] = mapped_column(Boolean, default=False)
-    execution_enabled_in_mvp: Mapped[bool] = mapped_column(
-        Boolean, default=False
-    )
+    execution_enabled_in_mvp: Mapped[bool] = mapped_column(Boolean, default=False)
     executed: Mapped[bool] = mapped_column(Boolean, default=False)
 
     incident: Mapped[Incident] = relationship(back_populates="recommendations")
@@ -231,9 +235,7 @@ class IncidentReport(Base):
     )
     markdown: Mapped[str] = mapped_column(Text)
     json_payload: Mapped[dict[str, Any]] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     incident: Mapped[Incident] = relationship(back_populates="reports")
 
@@ -248,12 +250,8 @@ class AgentRun(Base):
     workflow_version: Mapped[str] = mapped_column(String(64))
     prompt_versions: Mapped[dict[str, str]] = mapped_column(JSON, default=dict)
     model: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
-    ended_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(64))
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -272,9 +270,7 @@ class EvalRun(Base):
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, index=True
     )
-    completed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now
-    )
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     checks: Mapped[list[EvalCheckResult]] = relationship(
         back_populates="run", cascade="all, delete-orphan"

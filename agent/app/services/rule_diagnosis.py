@@ -37,13 +37,10 @@ class RuleDiagnosisEngine:
         unhealthy_dependencies = [
             name
             for name, status in context.dependencies.items()
-            if status.error
-            or not status.running
-            or status.health in {"unhealthy", "starting"}
+            if status.error or not status.running or status.health in {"unhealthy", "starting"}
         ]
         target_unavailable = (
-            context.target_status.error is not None
-            or not context.target_status.running
+            context.target_status.error is not None or not context.target_status.running
         )
         health_failed = context.health is not None and not context.health.healthy
 
@@ -76,9 +73,7 @@ class RuleDiagnosisEngine:
             ]
             current_status = "container_stopped"
         elif health_failed and unhealthy_dependencies:
-            severity = self._dependency_outage_severity(
-                context, unhealthy_dependencies
-            )
+            severity = self._dependency_outage_severity(context, unhealthy_dependencies)
             dependency_names = ", ".join(unhealthy_dependencies)
             summary = (
                 f"{context.service_name} health is failing because dependency "
@@ -89,9 +84,7 @@ class RuleDiagnosisEngine:
                     rank=1,
                     cause="dependency_unavailable",
                     confidence=0.95,
-                    evidence_refs=self._nonempty_refs(
-                        dependency_refs + health_ref, target_ref
-                    ),
+                    evidence_refs=self._nonempty_refs(dependency_refs + health_ref, target_ref),
                     reasoning=(
                         "The target is running but its health endpoint fails "
                         "while a configured dependency is stopped or unhealthy."
@@ -112,12 +105,8 @@ class RuleDiagnosisEngine:
             ]
             current_status = "dependency_unavailable"
         elif health_failed:
-            severity = (
-                "high" if context.criticality in {"high", "critical"} else "medium"
-            )
-            summary = (
-                f"{context.service_name} is running but its health endpoint fails"
-            )
+            severity = "high" if context.criticality in {"high", "critical"} else "medium"
+            summary = f"{context.service_name} is running but its health endpoint fails"
             hypotheses = [
                 HypothesisItem(
                     rank=1,
@@ -149,9 +138,7 @@ class RuleDiagnosisEngine:
             current_status = "health_check_failed"
         else:
             severity = "low"
-            summary = (
-                f"No active failure was detected for {context.service_name}"
-            )
+            summary = f"No active failure was detected for {context.service_name}"
             all_refs = [item.ref for item in context.evidence_items]
             hypotheses = [
                 HypothesisItem(
@@ -192,17 +179,12 @@ class RuleDiagnosisEngine:
 
     @staticmethod
     def _target_outage_severity(context: IncidentContext) -> str:
-        if (
-            context.criticality in {"high", "critical"}
-            or context.service_name == "backend"
-        ):
+        if context.criticality in {"high", "critical"} or context.service_name == "backend":
             return "high"
         return "medium"
 
     @staticmethod
-    def _dependency_outage_severity(
-        context: IncidentContext, unavailable: list[str]
-    ) -> str:
+    def _dependency_outage_severity(context: IncidentContext, unavailable: list[str]) -> str:
         if context.criticality == "critical" and len(unavailable) > 1:
             return "critical"
         if context.criticality in {"high", "critical"}:
@@ -211,34 +193,21 @@ class RuleDiagnosisEngine:
 
     @staticmethod
     def _refs(context: IncidentContext, evidence_type: str) -> list[str]:
-        return [
-            item.ref
-            for item in context.evidence_items
-            if item.type == evidence_type
-        ]
+        return [item.ref for item in context.evidence_items if item.type == evidence_type]
 
     @staticmethod
-    def _nonempty_refs(
-        preferred: list[str], fallback: list[str]
-    ) -> list[str]:
+    def _nonempty_refs(preferred: list[str], fallback: list[str]) -> list[str]:
         return list(dict.fromkeys(preferred)) or fallback
 
     @staticmethod
-    def _evidence_gaps(
-        context: IncidentContext, *, llm_available: bool
-    ) -> list[str]:
+    def _evidence_gaps(context: IncidentContext, *, llm_available: bool) -> list[str]:
         gaps: list[str] = []
         if context.metrics is not None and not context.metrics.available:
             gaps.append(
-                f"Prometheus metrics unavailable: "
-                f"{context.metrics.error or 'unknown error'}"
+                f"Prometheus metrics unavailable: {context.metrics.error or 'unknown error'}"
             )
         if context.logs.error is not None:
-            gaps.append(
-                f"Runtime logs unavailable: {context.logs.error.message}"
-            )
+            gaps.append(f"Runtime logs unavailable: {context.logs.error.message}")
         if not llm_available:
-            gaps.append(
-                "LLM unavailable; diagnosis is deterministic rules-only"
-            )
+            gaps.append("LLM unavailable; diagnosis is deterministic rules-only")
         return gaps

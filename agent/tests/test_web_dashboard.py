@@ -111,6 +111,30 @@ def seed_incident(settings: Settings) -> int:
                 "incident_id": incident.id,
                 "service": "backend",
                 "executed": False,
+                "what_changed": {
+                    "status": "available",
+                    "rule_summary": "HTTP failed while the dependency remained healthy.",
+                    "counts": {
+                        "material": 1,
+                        "supporting_context": 0,
+                        "other": 0,
+                        "total": 1,
+                    },
+                    "material_changes": [
+                        {
+                            "title": "Primary HTTP endpoint started failing",
+                            "severity": "critical",
+                            "before": {"value": "200 OK"},
+                            "after": {"value": "500 Internal Server Error"},
+                            "why_it_matters": "The primary endpoint is failing.",
+                            "evidence_refs": ["evidence:1"],
+                            "rule_id": "WC_HTTP_STATUS_PRIMARY_200_TO_500",
+                        }
+                    ],
+                    "supporting_context": [],
+                    "other_changes": [],
+                    "llm": {"status": "not_attempted"},
+                },
             },
         )
         incident_id = incident.id
@@ -154,9 +178,7 @@ def test_all_dashboard_pages_render_with_sample_incident(
         assert response.status_code == 200, path
         assert expected in response.text
 
-    detail = asyncio.run(
-        request(app, "GET", f"/incidents/{incident_id}")
-    )
+    detail = asyncio.run(request(app, "GET", f"/incidents/{incident_id}"))
     assert "backend_container_stopped" in detail.text
     assert "Execution disabled in MVP" in detail.text
     assert "No remediation executed" in detail.text
@@ -164,6 +186,9 @@ def test_all_dashboard_pages_render_with_sample_incident(
     assert "unpkg.com" not in detail.text
     assert "Collected" in detail.text
     assert "available" in detail.text
+    assert "What Changed?" in detail.text
+    assert "Primary HTTP endpoint started failing" in detail.text
+    assert "1 changes detected" in detail.text
 
 
 def test_htmx_partials_render(tmp_path: Path) -> None:
@@ -171,12 +196,8 @@ def test_htmx_partials_render(tmp_path: Path) -> None:
     seed_incident(settings)
     app = create_app(settings)
 
-    cards = asyncio.run(
-        request(app, "GET", "/partials/service-cards")
-    )
-    incidents = asyncio.run(
-        request(app, "GET", "/partials/incidents")
-    )
+    cards = asyncio.run(request(app, "GET", "/partials/service-cards"))
+    incidents = asyncio.run(request(app, "GET", "/partials/incidents"))
 
     assert cards.status_code == 200
     assert "Analyze service" in cards.text
@@ -190,9 +211,7 @@ def test_htmx_partials_render(tmp_path: Path) -> None:
 def test_vendored_htmx_asset_is_served() -> None:
     app = create_app(Settings())
 
-    response = asyncio.run(
-        request(app, "GET", "/static/htmx-2.0.8.min.js")
-    )
+    response = asyncio.run(request(app, "GET", "/static/htmx-2.0.8.min.js"))
 
     assert response.status_code == 200
     assert "htmx" in response.text[:500].lower()
@@ -233,9 +252,7 @@ def test_failed_run_is_explained_on_incident_detail(
         incident_id = incident.id
     engine.dispose()
 
-    response = asyncio.run(
-        request(create_app(settings), "GET", f"/incidents/{incident_id}")
-    )
+    response = asyncio.run(request(create_app(settings), "GET", f"/incidents/{incident_id}"))
 
     assert response.status_code == 200
     assert "Analysis failed" in response.text
@@ -267,9 +284,7 @@ def test_dashboard_actions_have_consistent_busy_states(
 def test_settings_hides_database_and_provider_secrets() -> None:
     settings = Settings.model_validate(
         {
-            "database": {
-                "url": "postgresql://secret-user:super-secret@db/incidentpilot"
-            },
+            "database": {"url": "postgresql://secret-user:super-secret@db/incidentpilot"},
             "llm": {
                 "provider": "ollama",
                 "model": "safe-model",
@@ -329,18 +344,12 @@ def test_report_export_and_download_routes(tmp_path: Path) -> None:
     incident_id = seed_incident(settings)
     app = create_app(settings)
 
-    exported = asyncio.run(
-        request(app, "GET", f"/reports/{incident_id}/export.json")
-    )
-    downloaded = asyncio.run(
-        request(app, "GET", f"/reports/{incident_id}/download.md")
-    )
+    exported = asyncio.run(request(app, "GET", f"/reports/{incident_id}/export.json"))
+    downloaded = asyncio.run(request(app, "GET", f"/reports/{incident_id}/download.md"))
 
     assert exported.status_code == 200
     assert exported.json()["service"] == "backend"
     assert exported.json()["executed"] is False
     assert downloaded.status_code == 200
     assert downloaded.text.startswith("# Incident Report")
-    assert 'filename="INC-001.md"' in downloaded.headers[
-        "content-disposition"
-    ]
+    assert 'filename="INC-001.md"' in downloaded.headers["content-disposition"]

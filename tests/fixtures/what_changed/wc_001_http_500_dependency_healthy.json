@@ -1,0 +1,8 @@
+{
+  "status": "available",
+  "counts": {"material": 1, "supporting_context": 1, "other": 0, "total": 2},
+  "expected_cards": [
+    {"rule_id": "WC_HTTP_STATUS_PRIMARY_200_TO_500", "severity": "critical", "materiality": "material", "rank": 40},
+    {"rule_id": "WC_DEPENDENCY_REMAINED_HEALTHY_WHILE_HTTP_FAILED", "severity": "info", "materiality": "supporting_context", "rank": 500}
+  ]
+}
